@@ -116,18 +116,17 @@ static void * __attribute__ ((unused)) allocate_block(Block **update_next, Block
 
 void *my_malloc(uint64_t size)
 {
-	size = roundUp(size);
+	uint64_t total_size = roundUp(size + HEADER_SIZE);
 	Block *current = _firstFreeBlock;
 	Block **update_next = &_firstFreeBlock;
 	while (current) {
-		if (current->size >= size) {
-			return allocate_block(update_next, current, size);
+		if (current->size >= total_size) {
+			return allocate_block(update_next, current, total_size);
 		}
 		update_next = &current->next;
 		current = current->next;
 	}
 	return NULL;
-
 }
 
 /*
