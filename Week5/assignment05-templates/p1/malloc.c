@@ -97,45 +97,38 @@ uint64_t roundUp(uint64_t n)
  *   replace block with a new free block starting somewhere within block
  */
 static void * __attribute__ ((unused)) allocate_block(Block **update_next, Block *block, uint64_t new_size) {
-	Block *next = _getNextBlockBySize(block);
-	if (block->size - new_size >= HEADER_SIZE) {
-		// We can split the block
-		Block *new_block = (Block*)((uint8_t*)block + new_size);
-		new_block->size = block->size - new_size;
-		new_block->next = next;
-		*update_next = new_block;
-		block->size = new_size;
-		return block->data;
-	} else {
-		// We can't split the block
-		*update_next = next;
-		return block->data;
-	}
+	// Check if after allocating new_size, there's enough space for another block's header
+    if (block->size - new_size >= HEADER_SIZE) {
+        // We can split the block
+        Block *new_block = (Block*)((uint8_t*)block + new_size);
+        new_block->size = block->size - new_size;
+        new_block->next = block->next; // Correctly update the next pointer
+        *update_next = new_block; // Update the free list pointer to point to the new block
+        block->size = new_size; // Update the size of the current block to reflect the allocation
+    } else {
+        // Not enough space to split the block; adjust the free list pointer directly
+        *update_next = block->next;
+    }
+    // Return a pointer to the usable memory area, just after the header
+    return (void*)((uint8_t*)block + HEADER_SIZE);
 }
 
 
 void *my_malloc(uint64_t size)
 {
-	uint64_t total_size = roundUp(size + HEADER_SIZE);
-	Block *current = _firstFreeBlock;
+	uint64_t totalSize = roundUp(size + HEADER_SIZE); // Include the header in the total size
+
+    Block *current = _firstFreeBlock;
     Block **prevNextPointer = &_firstFreeBlock;
     while (current != NULL) {
-        if (current->size >= total_size) {
-            // Use the allocate_block function to handle allocation and potential splitting.
-            void *allocatedMemory = allocate_block(prevNextPointer, current, total_size);
-            if (allocatedMemory != NULL) {
-                // Adjust the next pointer of the previous block if the current block was the first one and was split.
-                if (current == _firstFreeBlock) {
-                    _firstFreeBlock = *prevNextPointer;
-                }
-                // Return the allocated memory, ensuring to adjust if your structure requires.
-                return allocatedMemory;
-            }
+        if (current->size >= totalSize) {
+            // Delegate to allocate_block to handle allocation and potential splitting
+            return allocate_block(prevNextPointer, current, totalSize);
         }
         prevNextPointer = &current->next;
         current = current->next;
     }
-    // If no suitable block was found, return NULL.
+
     return NULL;
 }
 
