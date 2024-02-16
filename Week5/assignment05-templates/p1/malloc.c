@@ -149,28 +149,40 @@ static void __attribute__ ((unused)) merge_blocks(Block *block1, Block *block2)
 void my_free(void *address)
 {
 	Block *block = (Block*)((uint8_t*)address - HEADER_SIZE);
-	Block *current = _firstFreeBlock;
-	Block **update_next = &_firstFreeBlock;
-	while (current) {
-		if (current > block) {
-			*update_next = block;
-			block->next = current;
-			if (block->size + (uint8_t*)block == (uint8_t*)current) {
-				// We can merge the two blocks
-				merge_blocks(block, current);
-			}
-			return;
-		}
-		update_next = &current->next;
-		current = current->next;
-	}
-	*update_next = block;
-	block->next = NULL;
-	if (block->size + (uint8_t*)block == (uint8_t*)&_heapData[HEAP_SIZE]) {
-		// We can merge the two blocks
-		merge_blocks(block, (Block*)&_heapData[HEAP_SIZE]);
-	}
-	return;
+    Block *current = _firstFreeBlock;
+    Block **update_next = &_firstFreeBlock;
+    Block *prev = NULL;
+
+    while (current != NULL) {
+        if ((uint8_t*)block + block->size == (uint8_t*)current) {
+            // Merge with the next block if they're adjacent.
+            merge_blocks(block, current);
+            block->next = current->next;
+        } else if (prev && (uint8_t*)prev + prev->size == (uint8_t*)block) {
+            // Merge with the previous block if they're adjacent.
+            merge_blocks(prev, block);
+            return; // Merging done, exit.
+        }
+
+        if (current > block) {
+            // Insert block in the correct place and attempt to merge.
+            *update_next = block;
+            block->next = current;
+            // Try to merge with the next block again after insertion.
+            if ((uint8_t*)block + block->size == (uint8_t*)current) {
+                merge_blocks(block, current);
+            }
+            return; // Insertion and merging done, exit.
+        }
+
+        prev = current;
+        update_next = &current->next;
+        current = current->next;
+    }
+
+    // If the block is the last in memory, just insert it at the end.
+    *update_next = block;
+    block->next = NULL;
 
 	
 }
