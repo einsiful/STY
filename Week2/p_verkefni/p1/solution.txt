@@ -1,0 +1,12 @@
+# For each line, do not change the left side (e.g. "s:"), but remove all but one label on the right side 
+# Part 2.1a
+a: DATA
+b: RODATA
+s: BSS
+r: %RAX
+# Part 2.1b
+parg: TEXT
+*parg: TEXT
+# Part 2.1c
+func: %RAX
+return value: STACK
