@@ -121,24 +121,16 @@ void *my_malloc(uint64_t size)
     Block **prevNextPointer = &_firstFreeBlock;
     while (current != NULL) {
         if (current->size >= total_size) {
-            // Check if the remaining space after allocation is enough for another header.
-            // This ensures we don't leave unusable fragments in the heap.
-            if (current->size - total_size >= HEADER_SIZE) {
-                // Split the block if there's enough space for another block header.
-                Block *newBlock = (Block *)((uint8_t *)current + total_size);
-                newBlock->size = current->size - total_size;
-                newBlock->next = current->next;
-
-                current->size = total_size;
-                *prevNextPointer = newBlock; // Link the new block into the free list.
-            } else {
-                // Not enough space to split the block, remove it from the free list.
-                *prevNextPointer = current->next;
+            // Use the allocate_block function to handle allocation and potential splitting.
+            void *allocatedMemory = allocate_block(prevNextPointer, current, total_size);
+            if (allocatedMemory != NULL) {
+                // Adjust the next pointer of the previous block if the current block was the first one and was split.
+                if (current == _firstFreeBlock) {
+                    _firstFreeBlock = *prevNextPointer;
+                }
+                // Return the allocated memory, ensuring to adjust if your structure requires.
+                return allocatedMemory;
             }
-            // Mark the current block as allocated by setting its 'next' to NULL or another appropriate marker.
-            current->next = NULL;
-            // Return the address after the header, where the allocated memory begins.
-            return (void *)((uint8_t *)current + HEADER_SIZE);
         }
         prevNextPointer = &current->next;
         current = current->next;
