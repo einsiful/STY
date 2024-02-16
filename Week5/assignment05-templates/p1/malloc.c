@@ -148,9 +148,8 @@ void *my_malloc(uint64_t size)
  */
 static void __attribute__ ((unused)) merge_blocks(Block *block1, Block *block2)
 {
-	(void)block1;
-	(void)block2;
-	// TODO: Implement
+	block1->size += block2->size;
+	block1->next = block2->next;
 }
 
 
