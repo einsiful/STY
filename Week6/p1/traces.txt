@@ -1,0 +1,8 @@
+a98b900c2a64ad44f911be90d18d968c  trace-ls.txt
+15838145de88d92b923092b2fd304511  trace-compile-scheduler.txt
+
+
+55c22bebd23c3b6c8366dd85788e3558  trace-main.txt
+
+I used the following command to generate a trace file:
+valgrind --tool=lackey --trace-mem=yes ./Week1/p_verkefni/p2/parseint 2> ~/trace-main.txt

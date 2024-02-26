@@ -34,7 +34,8 @@ def get_page_list(filename):
                 columns = line.split()
                 
                 access_type = columns[0]
-                virtual_address = int(columns[1], base = 16) # Convert the address from hex to int using base=16
+                hex_address = columns[1].split(',')[0]
+                virtual_address = int(hex_address, base = 16) # Convert the address from hex to int using base=16
                 virtual_page_number = virtual_address // PAGE_SIZE
 
                 page_access_list.append(virtual_page_number)
@@ -43,6 +44,7 @@ def get_page_list(filename):
                     instruction_page_set.add(virtual_page_number)
 
     return page_access_list, instruction_page_set
+
 
 def plot_memory_access(page_access_list, png_file=None, instruction_page_set=None):
     # Create 2D array
@@ -69,10 +71,12 @@ def plot_memory_access(page_access_list, png_file=None, instruction_page_set=Non
     plt.title('Memory Access Patterns')
     plt.gca().invert_yaxis()
     plt.colorbar(label='Access')
+    
     if png_file:
         plt.savefig(png_file)
     else:
         plt.show()
+
 
 def export_page_trace(page_access_list, output_file):
     unique_page_access_list = [page_access_list[0]]
@@ -84,3 +88,12 @@ def export_page_trace(page_access_list, output_file):
     with open(output_file, 'w') as file:
         for page in unique_page_access_list:
             file.write(str(page) + '\n')
+            
+
+
+if __name__ == '__main__':
+    page_access_list, instruction_page_set = get_page_list('Week6/p1/testinput.txt')
+
+    plot_memory_access(page_access_list, 'testoutput.png', instruction_page_set)
+    
+    # I was unable to get plt.imshow to work as it would crash my computer using up to 50 GB of  memory
