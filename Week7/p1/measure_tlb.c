@@ -52,6 +52,15 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	// Example: With memsize=3000, step=1000, and count=10, your program shall read from these offsets in the allocated memory: 0, 1000, 2000, 0, 1000, 2000, 0, 1000, 2000, 0.
 	// In case of insufficient available memory, your function shall print an error message and return the error code -1. On success, return 0.
 	//   int accessMemory(uint64_t memsize, uint64_t count, uint64_t step);
+	// 	 ====== TEST 6: [1] Tested: With step=pagesize, you access the right number of pages =====
+	// Testing measure_tlb.c with test6.c
+	// Starting to test measure_tlb.c...
+	// /home/sty24/A7/p1/.tests/test6.c line 69: count => Expected 4000, but got 0
+	// /home/sty24/A7/p1/.tests/test6.c line 70: pages => Expected 1024, but got 0
+	// You have errors in your solution, please fix them.
+	// x:error
+	// TEST FAILED
+	// cflags_t: -ldl -std=c99 -W -Wall -D_POSIX_C_SOURCE=199309L
 
 	if (memsize < count * step) {
 		return -1;
@@ -60,12 +69,14 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	if (mem == NULL) {
 		return -1;
 	}
+	memset(mem, 0, memsize);
 	for (uint64_t i = 0; i < count; i++) {
-		(void)mem[i * step % memsize];
+		(void)mem[i * step];
 	}
 	free(mem);
 	return 0;
 	
+
 }
 
 int accessMemoryWrapper(void *p) {
