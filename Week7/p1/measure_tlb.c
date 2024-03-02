@@ -75,7 +75,8 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	}
 	free(mem);
 	return 0;
-	
+
+
 
 }
 
