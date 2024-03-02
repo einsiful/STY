@@ -45,10 +45,27 @@ int64_t measureFunction( int(*function)(void *), void *arg ) {
 
 int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	// TODO: Implement (Part P7.1b)
-	(void)memsize;
-	(void)count;
-	(void)step;
-	return -1;
+	// 	This is the function that you want to examine (measure the execution time of it). The function takes three arguments:
+	// • memsize: The size of the memory to use. Allocate (and deallocate when done) this memory on your program’s heap.
+	// • count: In total the function should access (read) the memory count times (read a single uint64 t value from memory each time).
+	// • step: After each read access, the program advances step bytes for the next access, wrapping back to the beginning when it reaches the end of the allocated memory.
+	// Example: With memsize=3000, step=1000, and count=10, your program shall read from these offsets in the allocated memory: 0, 1000, 2000, 0, 1000, 2000, 0, 1000, 2000, 0.
+	// In case of insufficient available memory, your function shall print an error message and return the error code -1. On success, return 0.
+	//   int accessMemory(uint64_t memsize, uint64_t count, uint64_t step);
+
+	if (memsize < count * step) {
+		return -1;
+	}
+	uint64_t *mem = malloc(memsize);
+	if (mem == NULL) {
+		return -1;
+	}
+	for (uint64_t i = 0; i < count; i++) {
+		(void)mem[i * step % memsize];
+	}
+	free(mem);
+	return 0;
+	
 }
 
 int accessMemoryWrapper(void *p) {
