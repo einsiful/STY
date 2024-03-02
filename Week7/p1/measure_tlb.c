@@ -12,9 +12,25 @@
 
 int64_t measureFunction( int(*function)(void *), void *arg ) {
 	// TODO: Implement! (Part P7.1a)
-	(void)function;
-	(void)arg;
-	return -1;
+	// 	For this purpose, the template contains the function measureFunction. This function
+	// takes a function pointer (function) and an argument pointer (arg) as parameters. You should implement code that
+	// • invokes the function referenced by function, passing arg as parameter;
+	// • before and after the invocation, uses the API function clock gettime (see man
+	// page) to obtain a high-precision time stamp; and finally
+	// • if function returns an error code (value < 0), returns -1;
+	// • otherwise, returns the elapsed time (difference between the two time stamps) in nanoseconds.
+	//   int64_t measureFunction(  int(*function)(void *), void *arg );
+
+	struct timespec start, end;
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	int ret = function(arg);
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	if(ret < 0) {
+		return -1;
+	}
+	return (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+	
+	
 }
 
 int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
