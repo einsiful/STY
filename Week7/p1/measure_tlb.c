@@ -32,25 +32,16 @@ int64_t measureFunction( int(*function)(void *), void *arg ) {
 // cflags_t: -ldl -std=c99 -W -Wall
 
 	struct timespec start, end;
-	int64_t diff;
-	if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
-		perror("clock_gettime");
-		exit(EXIT_FAILURE);
-	}
-	if (function(arg) < 0) {
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	int ret = function(arg);
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	if (ret < 0) {
 		return -1;
 	}
-	if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) {
-		perror("clock_gettime");
-		exit(EXIT_FAILURE);
-	}
-	diff = (end.tv_sec - start.tv_sec) * 1000000000;
-	diff += (end.tv_nsec - start.tv_nsec);
-	return diff;
-}
-
+	return (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
 
 	
+}
 
 int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	// TODO: Implement (Part P7.1b)
