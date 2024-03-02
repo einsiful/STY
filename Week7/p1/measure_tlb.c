@@ -82,8 +82,13 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 
 int accessMemoryWrapper(void *p) {
 	// TODO: Implement (Part P7.1c)
-	(void)p;
-	return -1;
+	// 	Looking at those two functions from the previous parts, there is a small problem: The generic measurement function takes a single void * as parameter, but the function you want to measure needs three parameters.
+	// This problem can be solved with a simple wrapper function. The header contains a struc- ture (MeasurementParameters) that can hold the three parameters. Implement a wrap- per function that retrieves the three parameters from the structure and calls your func- tion. This wrapper function can then be used as parameter for your measureFunction implementation.
+	//   void accessMemoryWrapper(MeasurementParamters *param);
+
+	accessMemory(((MeasurementParameters *)p)->memsize, ((MeasurementParameters *)p)->count, ((MeasurementParameters *)p)->step);
+	return 0;
+
 }
 
 // Feel free to adjust: Higher: Better accuracy; Lower: Faster
