@@ -21,16 +21,6 @@ int64_t measureFunction( int(*function)(void *), void *arg ) {
 	// • otherwise, returns the elapsed time (difference between the two time stamps) in nanoseconds.
 	//   int64_t measureFunction(  int(*function)(void *), void *arg );
 
-// 	 ====== TEST 1: [0.5] Tested: measureFunction correctly measures some time =====
-// Testing measure_tlb.c with test1.c
-// Starting to test measure_tlb.c...
-// You returned 0e6 ns for a function sleeping for 2 seconds
-// /home/sty24/A7/p1/.tests/test1.c line 19: You should return at least 1 seconds, but not much more than that
-// You have errors in your solution, please fix them.
-// x:error
-// TEST FAILED
-// cflags_t: -ldl -std=c99 -W -Wall
-
 	struct timespec start, end;
 	clock_gettime(CLOCK_MONOTONIC, &start);
 	int ret = function(arg);
@@ -71,7 +61,8 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	}
 	memset(mem, 0, memsize);
 	for (uint64_t i = 0; i < count; i++) {
-		(void)mem[i * step];
+		uint64_t index = (i * step) % memsize;
+        volatile uint64_t read = *((uint64_t *)((char *)mem + index));
 	}
 	free(mem);
 	return 0;
