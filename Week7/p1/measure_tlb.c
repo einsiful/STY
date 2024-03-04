@@ -44,7 +44,7 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 		sum += mem[(i*step) % (memsize/sizeof(uint64_t))];
 	}
 	free(mem);
-	return sum;
+	return 0;
 }
 
 int accessMemoryWrapper(void *params) {
