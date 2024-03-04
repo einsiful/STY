@@ -62,16 +62,14 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	// TEST FAILED
 	// cflags_t: -ldl -std=c99 -W -Wall -D_POSIX_C_SOURCE=199309L
 
-	if (memsize < count * step) {
-		return -1;
-	}
-	uint64_t *mem = malloc(memsize);
+	uint64_t *mem = (uint64_t *) malloc(memsize);
 	if (mem == NULL) {
+		printf("Error: Insufficient available memory\n");
 		return -1;
 	}
-	memset(mem, 0, memsize);
 	for (uint64_t i = 0; i < count; i++) {
-		(void)mem[i * step];
+		uint64_t index = (i * step) % memsize;
+		uint64_t value = mem[index];
 	}
 	free(mem);
 	return 0;
@@ -86,8 +84,6 @@ int accessMemoryWrapper(void *p) {
 	// This problem can be solved with a simple wrapper function. The header contains a struc- ture (MeasurementParameters) that can hold the three parameters. Implement a wrap- per function that retrieves the three parameters from the structure and calls your func- tion. This wrapper function can then be used as parameter for your measureFunction implementation.
 	//   void accessMemoryWrapper(MeasurementParamters *param);
 
-	accessMemory(((MeasurementParameters *)p)->memsize, ((MeasurementParameters *)p)->count, ((MeasurementParameters *)p)->step);
-	return 0;
 
 }
 
