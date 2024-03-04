@@ -62,17 +62,30 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	// TEST FAILED
 	// cflags_t: -ldl -std=c99 -W -Wall -D_POSIX_C_SOURCE=199309L
 
-	uint64_t *mem = (uint64_t *) malloc(memsize);
-	if (mem == NULL) {
-		printf("Error: Insufficient available memory\n");
+	uint64_t *memory_on_heap = (uint64_t *)malloc(memsize);
+	if(memory_on_heap == NULL)
+	{
+		printf("Failed to allocate memory");
 		return -1;
 	}
-	for (uint64_t i = 0; i < count; i++) {
-		uint64_t index = (i * step) % memsize;
-		uint64_t value = mem[index];
+
+
+	uint64_t current_step = 0;
+	for(uint64_t i = 0; i < count; i++)
+	{
+		if (current_step >= memsize)
+		{
+			current_step = 0;
+		}
+		memory_on_heap[current_step] += 1;
+		current_step += step;
 	}
-	free(mem);
+	free(memory_on_heap);
 	return 0;
+
+
+
+
 
 
 
