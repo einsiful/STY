@@ -34,41 +34,17 @@ int64_t measureFunction( int(*function)(void *), void *arg ) {
 }
 
 int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
-	// TODO: Implement (Part P7.1b)
-	// 	This is the function that you want to examine (measure the execution time of it). The function takes three arguments:
-	// • memsize: The size of the memory to use. Allocate (and deallocate when done) this memory on your program’s heap.
-	// • count: In total the function should access (read) the memory count times (read a single uint64 t value from memory each time).
-	// • step: After each read access, the program advances step bytes for the next access, wrapping back to the beginning when it reaches the end of the allocated memory.
-	// Example: With memsize=3000, step=1000, and count=10, your program shall read from these offsets in the allocated memory: 0, 1000, 2000, 0, 1000, 2000, 0, 1000, 2000, 0.
-	// In case of insufficient available memory, your function shall print an error message and return the error code -1. On success, return 0.
-	//   int accessMemory(uint64_t memsize, uint64_t count, uint64_t step);
-	// 	 ====== TEST 6: [1] Tested: With step=pagesize, you access the right number of pages =====
-	// Testing measure_tlb.c with test6.c
-	// Starting to test measure_tlb.c...
-	// /home/sty24/A7/p1/.tests/test6.c line 69: count => Expected 4000, but got 0
-	// /home/sty24/A7/p1/.tests/test6.c line 70: pages => Expected 1024, but got 0
-	// You have errors in your solution, please fix them.
-	// x:error
-	// TEST FAILED
-	// cflags_t: -ldl -std=c99 -W -Wall -D_POSIX_C_SOURCE=199309L
-
-	if (memsize < count * step) {
-		return -1;
-	}
-	uint64_t *mem = malloc(memsize);
-	if (mem == NULL) {
+	uint64_t *mem = (uint64_t*)malloc(memsize);
+	if(mem == NULL) {
 		return -1;
 	}
 	memset(mem, 0, memsize);
-	for (uint64_t i = 0; i < count; i++) {
-		uint64_t index = (i * step) % memsize;
-        volatile uint64_t read = *((uint64_t *)((char *)mem + index));
+	uint64_t sum = 0;
+	for(uint64_t i = 0; i < count; i++) {
+		sum += mem[(i*step) % (memsize/sizeof(uint64_t))];
 	}
 	free(mem);
-	return 0;
-
-
-
+	return sum;
 }
 
 int accessMemoryWrapper(void *params) {
