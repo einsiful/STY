@@ -69,7 +69,7 @@ void executeMeasurement() {
 	params.memsize = PAGESIZE;
 
 
-	while(params.memsize < 1024*1024*1024) {
+	while(params.memsize < 1000000000LL) {
 	
 		params.memsize = params.memsize * 2; // Change this line!
 		printf("%12" PRIu64 " ; ", params.memsize); // Do not change printf's in here!
