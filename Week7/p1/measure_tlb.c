@@ -99,31 +99,34 @@ void executeMeasurement() {
 	printf("step ; cachelines ;     tlbs ; time_duration ; ");
 	printf("\n");
 
-	// TODO: You may add code here
-	while(1) {
-		// TODO: You may add code here: Set memory size for this iteration
-		params.memsize = 8192; // Change this line!
+	params.memsize = PAGESIZE;
+
+
+	while(params.memsize < 1024*1024*1024) {
+	
+		params.memsize = params.memsize * 2; // Change this line!
 		printf("%12" PRIu64 " ; ", params.memsize); // Do not change printf's in here!
 
 		// This for loop will execute two times with step=64 and step=4096
 		for(uint64_t step = 64; step <= 4096; step *= 64) {
 			uint64_t t1 = 0;	// use this variable for your measurement result
-			(void)t1;
+			params.step = step;
+			params.count = COUNT;
 
-			// TODO: You may add code here ........... (main part of this function!)
+			t1 = measureFunction(accessMemoryWrapper, &params);
+
 
 			// Find out number number of cache lines (loc) and number of TLB entires (pages),
 			// corresponding to the memory size
-			// TODO: Modify the next two lines!
-			uint64_t locs = 8192 / step;
-			uint64_t pag = 2;
+			uint64_t locs = params.memsize / step;
+			uint64_t pag = params.memsize / PAGESIZE;
 
 			// Do not change printf's in here!
 			printf("%4" PRIu64 " ; %10" PRIu64 " ; %8" PRIu64 " ; %13.8f ; ",
 				step, locs, pag, t1*0.000000001);
 		}
 		printf("\n");
-		// TODO: Maybe you add code here as well...
+
 
 		// And maybe remove this line...
 		break;
