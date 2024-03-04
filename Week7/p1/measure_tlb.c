@@ -62,42 +62,31 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	// TEST FAILED
 	// cflags_t: -ldl -std=c99 -W -Wall -D_POSIX_C_SOURCE=199309L
 
-	uint64_t *memory_on_heap = (uint64_t *)malloc(memsize);
-	if(memory_on_heap == NULL)
-	{
-		printf("Failed to allocate memory");
+	if (memsize < count * step) {
 		return -1;
 	}
-
-
-	uint64_t current_step = 0;
-	for(uint64_t i = 0; i < count; i++)
-	{
-		if (current_step >= memsize)
-		{
-			current_step = 0;
-		}
-		memory_on_heap[current_step] += 1;
-		current_step += step;
+	uint64_t *mem = malloc(memsize);
+	if (mem == NULL) {
+		return -1;
 	}
-	free(memory_on_heap);
+	memset(mem, 0, memsize);
+	for (uint64_t i = 0; i < count; i++) {
+		(void)mem[i * step];
+	}
+	free(mem);
 	return 0;
-
-
-
-
 
 
 
 }
 
-int accessMemoryWrapper(void *p) {
-	// TODO: Implement (Part P7.1c)
-	// 	Looking at those two functions from the previous parts, there is a small problem: The generic measurement function takes a single void * as parameter, but the function you want to measure needs three parameters.
-	// This problem can be solved with a simple wrapper function. The header contains a struc- ture (MeasurementParameters) that can hold the three parameters. Implement a wrap- per function that retrieves the three parameters from the structure and calls your func- tion. This wrapper function can then be used as parameter for your measureFunction implementation.
-	//   void accessMemoryWrapper(MeasurementParamters *param);
+int accessMemoryWrapper(void *params) {
+	MeasurementParameters* new_params = (MeasurementParameters*)params;
+	uint64_t memsize = new_params->memsize; 
+	uint64_t count = new_params->count; 
+	uint64_t step = new_params->step;
 
-
+	return accessMemory(memsize, count, step);
 }
 
 // Feel free to adjust: Higher: Better accuracy; Lower: Faster
