@@ -44,7 +44,7 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 		sum += mem[(i*step) % (memsize/sizeof(uint64_t))];
 	}
 	free(mem);
-	return 0;
+	return sum;
 }
 
 int accessMemoryWrapper(void *params) {
@@ -80,7 +80,7 @@ void executeMeasurement() {
 			params.step = step;
 			params.count = COUNT;
 
-			t1 = measureFunction(accessMemoryWrapper, &params);
+			t1 = measureFunction((*accessMemoryWrapper), &params);
 
 
 			// Find out number number of cache lines (loc) and number of TLB entires (pages),
