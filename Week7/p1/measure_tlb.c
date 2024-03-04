@@ -38,13 +38,11 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	if(mem == NULL) {
 		return -1;
 	}
-	memset(mem, 0, memsize);
-	uint64_t sum = 0;
+	uint64_t steps = 0;
 	for(uint64_t i = 0; i < count; i++) {
-		sum += mem[(i*step) % (memsize/sizeof(uint64_t))];
+		mem[steps] += 1;
+		steps = (steps + step) % (memsize / sizeof(uint64_t));
 	}
-	free(mem);
-	return sum;
 }
 
 int accessMemoryWrapper(void *params) {
