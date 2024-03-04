@@ -40,8 +40,8 @@ int accessMemory(uint64_t memsize, uint64_t count, uint64_t step) {
 	}
 	uint64_t steps = 0;
 	for(uint64_t i = 0; i < count; i++) {
-		mem[steps] += 1;
-		steps = (steps + step) % (memsize / sizeof(uint64_t));
+		steps = (i*step) % memsize;
+		mem[steps/sizeof(uint64_t)] += i;
 	}
 	free(mem);
 	return 0;
