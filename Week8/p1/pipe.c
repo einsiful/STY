@@ -13,18 +13,16 @@ char* get_output(char *argv[]) {
 
     int pipefd[2];
 
-    if (argv == NULL) {
-        return NULL;
-    }
-
     char buffer[buf_size];
     char *ptr = malloc(buf_size);
 
     if (ptr == NULL) {
+        perror("malloc failed");
         return NULL;
     }
 
     if (pipe(pipefd) == -1) {
+        perror("pipe failed");
         return NULL;
     }
 
