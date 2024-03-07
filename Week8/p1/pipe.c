@@ -68,10 +68,8 @@ char* get_output(char *argv[]) {
             }
             ptr[i] = '\0';
         }
-
-    }
-
     return ptr;
+    }
 
 }
 
