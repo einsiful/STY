@@ -1,0 +1,8 @@
+{
+"tested" : "You created the pipe.",
+"preload" : true,
+"public" : true,
+"cflags-preload" : "-ldl -std=c99 -W -Wall",
+"cflags-test" : "-ldl -std=c99 -W -Wall",
+"weight": 0.5
+}

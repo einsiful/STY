@@ -1,0 +1,5 @@
+{
+"source":"message_queue.c",
+"header":"message_queue.h",
+"cflags-student":"-g -W -Wall -Werror -std=c99"
+}

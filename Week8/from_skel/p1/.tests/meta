@@ -1,0 +1,5 @@
+{
+"source":"pipe.c",
+"header":"pipe.h",
+"cflags-student":"-g -W -Wall -Werror -std=c99"
+}

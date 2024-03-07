@@ -1,0 +1,8 @@
+{
+"tested" : "You called mq_send in sendAddTask correctly.",
+"preload" : true,
+"public" : true,
+"cflags-preload" : "-ldl -std=c99 -W -Wall -lrt",
+"cflags-test" : "-ldl -std=c99 -W -Wall -lrt",
+"weight": 0.5
+}
