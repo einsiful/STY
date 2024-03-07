@@ -67,8 +67,8 @@ char* get_output(char *argv[]) {
                 ptr[i] = buffer[i];
             }
             ptr[i] = '\0';
+            return ptr;
         }
-    return ptr;
     }
 
 }
