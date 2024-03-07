@@ -27,49 +27,47 @@ char* get_output(char *argv[]) {
 
     child_pid = fork();
     if (child_pid == -1) {
-        perror("fork failed");
         close(pipefd[READ_END]);
         close(pipefd[WRITE_END]);
         return NULL;
     } else if (child_pid == 0) {
         close(pipefd[READ_END]);
-        dup2(pipefd[WRITE_END], STDOUT_FILENO);
-        close(pipefd[WRITE_END]);
+    dup2(pipefd[WRITE_END], STDOUT_FILENO);
 
         execvp(argv[0], argv);
         perror("execvp failed");
         exit(EXIT_FAILURE);
     } else {
+        int status;
+
+        close(pipefd[WRITE_END]);
+    
+    char buffer[1024];
+    int n = read(pipefd[READ_END], buffer, 1024);
+    if (n == 0) {
+        return NULL;
+    }
+    buffer[1024] = 0;
+
+    char *newline = strchr(buffer, '\n');
+    if (newline != NULL) {
+        *newline = 0;
+    }
+
+    char *ptr = malloc(strlen(buffer) + 20);
+
+    strcpy(ptr, buffer);
+
+    while((n = read(pipefd[READ_END], buffer, 1024)) > 0) {
+        buffer[n] = 0;
+        ptr = realloc(ptr, strlen(ptr) + n + 20);
+        strcat(ptr, buffer);
+    }
+
+        waitpid(child_pid, &status, 0);
         close(pipefd[WRITE_END]);
 
-        char buf[1024];
-        ssize_t n;
+        close(pipefd[READ_END]);
 
-        while(1) {
-            n = read(pipefd[READ_END], buf, sizeof(buf));
-            if (n == -1) {
-                perror("read failed");
-                close(pipefd[READ_END]);
-                return NULL;
-            } else if (n == 0) {
-                break;
-            }
-
-            output = realloc(output, output_size + n + 1);
-            if (output == NULL) {
-                perror("realloc failed");
-                close(pipefd[READ_END]);
-                return NULL;
-            }
-
-            memcpy(output + output_size, buf, n);
-            output_size += n;
-            output[output_size] = '\0';
-
-            if (strchr(buf, '\n') != NULL) {
-                break;
-            }
-        }
-    }
         return output;
     }
