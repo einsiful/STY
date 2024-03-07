@@ -28,6 +28,7 @@ char* get_output(char *argv[]) {
 
     int child_pid = fork();
     if (child_pid == -1) {
+        perror("fork failed");
         close(pipefd[0]);
         close(pipefd[1]);
         return NULL;
