@@ -1,79 +1,75 @@
 #define _GNU_SOURCE
-#include <sys/wait.h> // For waitpid
-#include <unistd.h> // For fork, pipe, dup2
-#include <stdlib.h> // For malloc, free, exit
-#include <stdio.h> // For perror, printf
-#include <string.h> // For memcpy
 
-#define BUFFER_SIZE 1024
+#include "pipe.h"
+#include <sys/wait.h> /* For waitpid */
+#include <unistd.h> /* For fork, pipe */
+#include <stdlib.h> /* For exit */
+#include <stdio.h>
+#include <string.h>
 
-char* get_output(char* argv[]) {
+#define READ_END  0
+#define WRITE_END 1
+
+char* get_output(char *argv[]) {
     int pipefd[2];
     pid_t child_pid;
-    char buffer[BUFFER_SIZE];
-    char* output = NULL;
-    size_t total_bytes_read = 0;
+    char *output = NULL;
+    size_t output_size = 0;
 
-    // Initialize pipe
+    if (argv == NULL) {
+        return NULL;
+    }
+
     if (pipe(pipefd) == -1) {
         perror("pipe failed");
         return NULL;
     }
 
-    // Forking a child process
     child_pid = fork();
     if (child_pid == -1) {
         perror("fork failed");
-        close(pipefd[0]); // Close read end
-        close(pipefd[1]); // Close write end
+        close(pipefd[READ_END]);
+        close(pipefd[WRITE_END]);
         return NULL;
-    } else if (child_pid == 0) { // Child process
-        close(pipefd[0]); // Child doesn't read from pipe
-        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
-        close(pipefd[1]); // Close the original write end of the pipe
+    } else if (child_pid == 0) {
+        close(pipefd[READ_END]);
+        dup2(pipefd[WRITE_END], STDOUT_FILENO);
+        close(pipefd[WRITE_END]);
 
         execvp(argv[0], argv);
-        // If execvp returns, it must have failed
         perror("execvp failed");
         exit(EXIT_FAILURE);
-    }
+    } else {
+        close(pipefd[WRITE_END]);
 
-    // Parent process
-    close(pipefd[1]); // Parent doesn't write to pipe
-    ssize_t bytes_read;
+        char buf[1024];
+        ssize_t n;
 
-    // Dynamically allocate memory for output
-    output = malloc(BUFFER_SIZE);
-    if (!output) {
-        perror("malloc failed");
-        close(pipefd[0]);
-        waitpid(child_pid, NULL, 0);
-        return NULL;
-    }
+        while(1) {
+            n = read(pipefd[READ_END], buf, sizeof(buf));
+            if (n == -1) {
+                perror("read failed");
+                close(pipefd[READ_END]);
+                return NULL;
+            } else if (n == 0) {
+                break;
+            }
 
-    while ((bytes_read = read(pipefd[0], buffer, BUFFER_SIZE)) > 0) {
-        char* new_output = realloc(output, total_bytes_read + bytes_read + 1); // +1 for null terminator
-        if (!new_output) {
-            perror("realloc failed");
-            free(output);
-            close(pipefd[0]);
-            waitpid(child_pid, NULL, 0);
-            return NULL;
+            output = realloc(output, output_size + n + 1);
+            if (output == NULL) {
+                perror("realloc failed");
+                close(pipefd[READ_END]);
+                return NULL;
+            }
+
+            memcpy(output + output_size, buf, n);
+            output_size += n;
+            output[output_size] = '\0';
+
+            if (strchr(buf, '\n') != NULL) {
+                break;
+            }
         }
-        output = new_output;
-        memcpy(output + total_bytes_read, buffer, bytes_read);
-        total_bytes_read += bytes_read;
     }
-    output[total_bytes_read] = '\0'; // Null-terminate the output
-
-    if (bytes_read == -1) {
-        perror("read failed");
-        free(output);
-        output = NULL;
+        return output;
     }
-
-    close(pipefd[0]); // Close the read end of the pipe
-    waitpid(child_pid, NULL, 0); // Wait for the child process to exit
-
-    return output; // Return the captured output
-}
