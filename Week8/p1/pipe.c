@@ -60,7 +60,7 @@ char* get_output(char *argv[]) {
 
         else{
             int i;
-            for (i = 0; i < bytes_read; i++ && i < buf_size - 1) {
+            for (i = 0; i < buf_size && i < buffer[i]; i++) {
                 ptr[i] = buffer[i];
             }
             ptr[i] = '\0';
