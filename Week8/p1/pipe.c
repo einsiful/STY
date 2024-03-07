@@ -33,15 +33,15 @@ char* get_output(char *argv[]) {
     
         else if (child_pid == 0) {
             dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        close(pipefd[1]);
+            close(pipefd[0]);
+            close(pipefd[1]);
 
-        if(execvp(argv[0], argv) == -1)
-        {
-	        perror("execvp failed");
-            exit(255);
-            return NULL;
-        }
+            if(execvp(argv[0], argv) == -1)
+            {
+                perror("execvp failed");
+                exit(255);
+                return NULL;
+            }
         }
 
     else {
