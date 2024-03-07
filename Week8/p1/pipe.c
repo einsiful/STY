@@ -47,11 +47,12 @@ char* get_output(char *argv[]) {
     }
     else {
         int status;
+        close(pipefd[0]);
         waitpid(child_pid, &status, 0);
 
         ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
 
-        close(pipefd[0]);
+       
         close(pipefd[1]);
 
         if (bytes_read == -1) {
