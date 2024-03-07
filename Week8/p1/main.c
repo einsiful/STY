@@ -12,7 +12,7 @@ int main()
 
     printf("Running echo 'hello world'\n");
     char *argv1[] = {
-        "echorr",
+        "echo",
         "hello world",
         NULL
     };
