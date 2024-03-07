@@ -31,41 +31,47 @@ char* get_output(char *argv[]) {
         return NULL;
     }
     
-    else if (child_pid == 0) {
+    else if (child_pid == 0) 
+    {
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[0]);
         close(pipefd[1]);
-        if (execvp(argv[0], argv) == -1) {
-            perror("execvp failed");
+
+        if(execvp(argv[0], argv) == -1)
+        {
+	        perror("execvp failed");
             exit(255);
             return NULL;
         }
-
     }
-        
-    else {
-        int status;
+    else
+    {
+
+	    int status;
         waitpid(child_pid, &status, 0);
-
-        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
-
+        
+        ssize_t bytes_read = read(pipefd[0], buffer, buf_size - 1);
+        
         close(pipefd[0]);
         close(pipefd[1]);
-
-        if (bytes_read == -1) {
-           return NULL;
+        
+        if (bytes_read == -1) 
+        {
+            perror("read failed");
+            return NULL;
         }
 
-        else{
+
+
+        else 
+        {
             int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
+            for (i = 0; i < buf_size && buffer[i] != '\n'; i++) 
+            {
                 ptr[i] = buffer[i];
             }
-            ptr[i] = '\0';
-            return ptr;
+            ptr[i] = '\0'; // Null-terminate the string
         }
     }
+    return ptr;
 }
