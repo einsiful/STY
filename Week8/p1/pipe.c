@@ -42,7 +42,7 @@ char* get_output(char *argv[]) {
                 exit(255);
                 return NULL;
             }
-        }
+    }
     else {
         int status;
         waitpid(child_pid, &status, 0);
@@ -68,6 +68,4 @@ char* get_output(char *argv[]) {
             return ptr;
         }
     }
-
 }
-
