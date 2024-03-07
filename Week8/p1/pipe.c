@@ -30,17 +30,19 @@ char* get_output(char *argv[]) {
         close(pipefd[1]);
         return NULL;
     }
-    else if (child_pid == 0) {
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        execvp(argv[0], argv);
-        perror("execvp failed");
-        exit(255);
+    else if (child_pid == 0) 
+        {
+            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[0]);
+            close(pipefd[1]);
 
-
-
-       
-    }
+            if(execvp(argv[0], argv) == -1)
+            {
+                perror("execvp failed");
+                exit(255);
+                return NULL;
+            }
+        }
     else {
         int status;
         waitpid(child_pid, &status, 0);
