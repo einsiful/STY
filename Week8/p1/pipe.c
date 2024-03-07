@@ -13,6 +13,10 @@ char* get_output(char *argv[]) {
 
     int pipefd[2];
 
+    if (argv == NULL) {
+        return NULL;
+    }
+
     char buffer[buf_size];
     char *ptr = malloc(buf_size);
 
@@ -30,48 +34,42 @@ char* get_output(char *argv[]) {
         close(pipefd[1]);
         return NULL;
     }
-    
-    else if (child_pid == 0) 
-    {
+    else if (child_pid == 0) {
+        close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        close(pipefd[1]);
+        execvp(argv[0], argv);
+        perror("execvp failed");
+        exit(255);
 
-        if(execvp(argv[0], argv) == -1)
-        {
-	        perror("execvp failed");
-            exit(255);
-            return NULL;
-        }
+
+
+       
     }
-    else
-    {
-
-	    int status;
+    else {
+        int status;
         waitpid(child_pid, &status, 0);
-        
-        ssize_t bytes_read = read(pipefd[0], buffer, buf_size - 1);
-        
+
+        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
+
         close(pipefd[0]);
         close(pipefd[1]);
-        
-        if (bytes_read == -1) 
-        {
-            perror("read failed");
-            return NULL;
+
+        if (bytes_read == -1) {
+           return NULL;
         }
 
-
-
-        else 
-        {
+        else{
             int i;
-            for (i = 0; i < buf_size && buffer[i] != '\n'; i++) 
-            {
+            for (i = 0; i < bytes_read; i++) {
+                if (buffer[i] == '\n') {
+                    break;
+                }
                 ptr[i] = buffer[i];
             }
-            ptr[i] = '\0'; // Null-terminate the string
+            ptr[i] = '\0';
+            return ptr;
         }
     }
-    return ptr;
+
 }
+
