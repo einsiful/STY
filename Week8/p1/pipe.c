@@ -60,16 +60,12 @@ char* get_output(char *argv[]) {
 
         else{
             int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
+            for (i = 0; i < bytes_read; i++ && i < buf_size - 1) {
                 ptr[i] = buffer[i];
             }
             ptr[i] = '\0';
-            return ptr;
         }
     }
-
+    return ptr;
 }
 
