@@ -39,9 +39,8 @@ char* get_output(char *argv[]) {
         close(pipefd[0]);
         close(pipefd[1]);
 
-        if(execvp(argv[0], argv) == -1)
-        {
-	        perror("execvp failed");
+        if(execvp(argv[0], argv) == -1){
+            perror("execvp failed");
             exit(255);
             return NULL;
         }
@@ -56,7 +55,8 @@ char* get_output(char *argv[]) {
         close(pipefd[1]);
 
         if (bytes_read == -1) {
-           return NULL;
+            perror("read failed");
+            return NULL;
         }
 
         else{
@@ -72,5 +72,6 @@ char* get_output(char *argv[]) {
         }
     }
 
-}
+    return NULL;
+    }
 
