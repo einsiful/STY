@@ -1,0 +1,7 @@
+{
+"tested" : "You call mq_open in runServer correctly.",
+"preload" : true,
+"public" : true,
+"cflags-preload" : "-ldl -std=c99 -W -Wall -lrt",
+"cflags-test" : "-ldl -std=c99 -W -Wall -lrt"
+}
