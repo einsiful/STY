@@ -1,8 +1,13 @@
+#define _GNU_SOURCE
+
+#include "pipe.h"
+#include <sys/wait.h> /* For waitpid */
+#include <unistd.h> /* For fork, pipe */
+#include <stdlib.h> /* For exit */
+//#include <fcntl.h>
+//#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
 
 #define READ_END  0
 #define WRITE_END 1
