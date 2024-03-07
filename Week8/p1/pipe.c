@@ -7,67 +7,73 @@
 #include <stdio.h>
 #include <string.h>
 
-#define READ_END  0
-#define WRITE_END 1
+#define buf_size 1024
 
 char* get_output(char *argv[]) {
+
     int pipefd[2];
-    pid_t child_pid;
-    char *output = NULL;
-    size_t output_size = 0;
 
     if (argv == NULL) {
         return NULL;
     }
 
+    char buffer[buf_size];
+    char *ptr = malloc(buf_size);
+
+    if (ptr == NULL) {
+        return NULL;
+    }
+
     if (pipe(pipefd) == -1) {
-        perror("pipe failed");
         return NULL;
     }
 
-    child_pid = fork();
+    int child_pid = fork();
     if (child_pid == -1) {
-        close(pipefd[READ_END]);
-        close(pipefd[WRITE_END]);
+        close(pipefd[0]);
+        close(pipefd[1]);
         return NULL;
-    } else if (child_pid == 0) {
-        close(pipefd[READ_END]);
-    dup2(pipefd[WRITE_END], STDOUT_FILENO);
+    }
+    else if (child_pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
 
-        execvp(argv[0], argv);
-        perror("execvp failed");
-        exit(EXIT_FAILURE);
-    } else {
+        if (execvp(argv[0], argv) == -1) {
+            perror("execvp failed");
+            exit(255);
+
+        }
+
+       
+    }
+    else {
         int status;
-
-        close(pipefd[WRITE_END]);
-    
-    char buffer[1024];
-    int n = read(pipefd[READ_END], buffer, 1024);
-    if (n == 0) {
-        return NULL;
-    }
-    buffer[1024] = 0;
-
-    char *newline = strchr(buffer, '\n');
-    if (newline != NULL) {
-        *newline = 0;
-    }
-
-    char *ptr = malloc(strlen(buffer) + 20);
-
-    strcpy(ptr, buffer);
-
-    while((n = read(pipefd[READ_END], buffer, 1024)) > 0) {
-        buffer[n] = 0;
-        ptr = realloc(ptr, strlen(ptr) + n + 20);
-        strcat(ptr, buffer);
-    }
-
         waitpid(child_pid, &status, 0);
-        close(pipefd[WRITE_END]);
 
-        close(pipefd[READ_END]);
+        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
 
-        return output;
+        close(pipefd[0]);
+        close(pipefd[1]);
+
+        if (bytes_read == -1) {
+           return NULL;
+        }
+
+        else{
+            int i;
+            for (i = 0; i < bytes_read; i++) {
+                if (buffer[i] == '\n') {
+                    break;
+                }
+                ptr[i] = buffer[i];
+            }
+            ptr[i] = '\0';
+        }
+
     }
+
+    return ptr;
+
+}
+
