@@ -39,10 +39,12 @@ char* get_output(char *argv[]) {
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
 
+
+
         if (execvp(argv[0], argv) == -1) {
             perror("execvp failed");
             exit(255);
-
+            return NULL;
         }
 
        
