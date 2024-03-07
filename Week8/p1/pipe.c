@@ -13,10 +13,6 @@ char* get_output(char *argv[]) {
 
     int pipefd[2];
 
-    if (argv == NULL) {
-        return NULL;
-    }
-
     char buffer[buf_size];
     char *ptr = malloc(buf_size);
 
@@ -60,12 +56,16 @@ char* get_output(char *argv[]) {
 
         else{
             int i;
-            for (i = 0; i < buf_size && i < buffer[i]; i++) {
+            for (i = 0; i < bytes_read; i++) {
+                if (buffer[i] == '\n') {
+                    break;
+                }
                 ptr[i] = buffer[i];
             }
             ptr[i] = '\0';
+            return ptr;
         }
     }
-    return ptr;
+
 }
 
