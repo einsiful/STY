@@ -31,8 +31,8 @@ char* get_output(char *argv[]) {
         return NULL;
     }
     else if (child_pid == 0) {
-        close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]);
         execvp(argv[0], argv);
         perror("execvp failed");
         exit(255);
