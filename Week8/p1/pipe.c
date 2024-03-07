@@ -13,6 +13,14 @@
 char *get_output(char *argv[])
 {
     // Create child process
+
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+            perror("pipe failed");
+            return NULL;
+    }
+
+
     int child_pid = fork();
     if (child_pid == -1) {
 	perror("fork failed");
