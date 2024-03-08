@@ -36,6 +36,7 @@ char* get_output(char *argv[]) {
         exit(255);
     }
     else {
+        int status;
         close(pipefd[1]);
 
     char buffer[1025];
@@ -51,40 +52,15 @@ char* get_output(char *argv[]) {
     char *result = malloc(strlen(buffer) + 20);
     strcpy(result, buffer);
 
-    size_t current_length = 0; // Keep track of the current length of 'result'
-result = malloc(1); // Allocate a minimal initial buffer
-if (!result) {
-    perror("Initial malloc failed");
-    return NULL;
-}
-result[0] = '\0'; // Ensure the buffer is initially an empty string
-
-while (1) {
-    nbytes = read(pipefd[0], buffer, buf_size - 1); // Read from the pipe
-    if (nbytes <= 0) { // No more data or an error
-        break;
-    }
-
-    buffer[nbytes] = '\0'; // Null-terminate the buffer
-
-    for (int i = 0; i < nbytes; i++) {
-        if ((buffer[i] >= '0' && buffer[i] <= '9') || buffer[i] == '-') {
-            // Ensure enough space for one more character and a null terminator
-            char *temp_result = realloc(result, current_length + 2);
-            if (!temp_result) {
-                perror("realloc failed");
-                free(result);
-                return NULL;
-            }
-            result = temp_result;
-            
-            result[current_length++] = buffer[i]; // Append the character
-            result[current_length] = '\0'; // Re-null-terminate
+    for (int i = 0; i < 1024; i++) {
+        if (buffer[i] == 0) {
+            break;
+        }
+        if (buffer[i] == '\n') {
+            buffer[i] = ' ';
         }
     }
-}
 
-// After loop: 'result' should contain only the filtered output
-return result;
+    return result;
     }
 }
