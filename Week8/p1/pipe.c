@@ -51,33 +51,40 @@ char* get_output(char *argv[]) {
     char *result = malloc(strlen(buffer) + 20);
     strcpy(result, buffer);
 
-    while(1){
-        nbytes = read(pipefd[0], buffer, buf_size - 1); // Leave space for null terminator
-    if (nbytes <= 0) { // Check for end of data or error
-        break; // Exit loop if no more data or if an error occurred
+    size_t current_length = 0; // Keep track of the current length of 'result'
+result = malloc(1); // Allocate a minimal initial buffer
+if (!result) {
+    perror("Initial malloc failed");
+    return NULL;
+}
+result[0] = '\0'; // Ensure the buffer is initially an empty string
+
+while (1) {
+    nbytes = read(pipefd[0], buffer, buf_size - 1); // Read from the pipe
+    if (nbytes <= 0) { // No more data or an error
+        break;
     }
 
-    buffer[nbytes] = '\0'; // Ensure buffer is null-terminated
+    buffer[nbytes] = '\0'; // Null-terminate the buffer
 
-    // Optional: Process the buffer here if you need to filter or validate content
-    // For simplicity, this example directly appends valid content (numeric sequences separated by '-')
-    for (int i = 0; i < nbytes; ++i) {
+    for (int i = 0; i < nbytes; i++) {
         if ((buffer[i] >= '0' && buffer[i] <= '9') || buffer[i] == '-') {
-            // Append valid characters directly to 'result'
-            size_t current_len = strlen(result);
-            char valid_char[2] = {buffer[i], '\0'}; // Temp string for appending
-
-            char *temp_result = realloc(result, current_len + 2); // +2 for char and null terminator
-            if (temp_result == NULL) {
+            // Ensure enough space for one more character and a null terminator
+            char *temp_result = realloc(result, current_length + 2);
+            if (!temp_result) {
+                perror("realloc failed");
                 free(result);
                 return NULL;
             }
             result = temp_result;
-            strcat(result, valid_char); // Append the valid character
+            
+            result[current_length++] = buffer[i]; // Append the character
+            result[current_length] = '\0'; // Re-null-terminate
         }
-        // Optionally, handle newline or other characters specifically here
     }
 }
-    return result;
+
+// After loop: 'result' should contain only the filtered output
+return result;
     }
 }
