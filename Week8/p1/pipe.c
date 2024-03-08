@@ -13,8 +13,9 @@ char* get_output(char *argv[]) {
 
     int pipefd[2];
 
-    char buffer[buf_size];
     char *ptr = malloc(buf_size);
+    char buffer[buf_size];
+    char *output = NULL;
 
     if (ptr == NULL) {
         perror("malloc failed");
@@ -46,31 +47,37 @@ char* get_output(char *argv[]) {
         perror("execvp failed");
         exit(1);
     } else {
-        int status;
-        waitpid(child_pid, &status, 0);
+        // Parent process
+        close(pipefd[1]); // Close unused write end
 
-        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
-
-        close(pipefd[0]);
-        close(pipefd[1]);
+        ssize_t bytes_read = read(pipefd[0], buffer, buf_size - 1);
+        close(pipefd[0]); // Close read end after reading
 
         if (bytes_read == -1) {
             perror("read failed");
             return NULL;
         }
 
-        else{
-            int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
-                ptr[i] = buffer[i];
-            }
-            ptr[i] = '\0';
+        buffer[bytes_read] = '\0'; // Null-terminate the string read from the child process
+
+        // Allocate memory for output to return
+        output = malloc(bytes_read + 1); // +1 for null terminator
+        if (output == NULL) {
+            perror("malloc failed");
+            return NULL;
+        }
+
+        strncpy(output, buffer, bytes_read + 1);
+
+        // Wait for child process to terminate and check its exit status
+        int status;
+        waitpid(child_pid, &status, 0);
+        if (status != 0) {
+            printf("Child process terminated with error. Status: %d\n", status);
+            free(output); // Clean up allocated memory on error
+            return NULL;
         }
     }
 
-    return ptr;
-    }
-
+    return output;
+}
