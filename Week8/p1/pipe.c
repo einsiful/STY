@@ -43,10 +43,9 @@ char* get_output(char *argv[]) {
     }
     else {
         int status;
-        char buf[1025];
         waitpid(child_pid, &status, 0);
 
-        ssize_t bytes_read = read(pipefd[0], buf, buf_size);
+        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
 
         close(pipefd[0]);
         close(pipefd[1]);
