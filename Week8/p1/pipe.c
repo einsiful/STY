@@ -38,23 +38,30 @@ char* get_output(char *argv[]) {
         exit(255);
     }
     else {
-        close(pipefd[1]);
         int status;
-        waitpid(child_pid, &status, 0);
-        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            int n = read(pipefd[0], buffer, buf_size);
-            if (n == -1) {
-                close(pipefd[0]);
-                return NULL;
-            }
-            buffer[n] = '\0';
-            char* result = strdup(buffer);
-            close(pipefd[0]);
-            return result;
+        close(pipefd[1]);
+
+    int nbytes = read(pipefd[0], buffer, buf_size);
+    if (nbytes == -1) {
+        return NULL;
+    }
+    buffer[1025] = 0;
+    char *output = strchr(buffer, '\n');
+    if (output != NULL) {
+        *output = 0;
+    }
+    char *result = malloc(strlen(buffer) + 20);
+    strcpy(result, buffer);
+
+    while(1) {
+        nbytes = read(pipefd[0], buffer, buf_size);
+        if (nbytes <= 0) {
+            break;
         }
-        else {
-            close(pipefd[0]);
-            return NULL;
-        }
+
+    }
+    waitpid(child_pid, &status, 0);
+    close(pipefd[1]);
+    return result;
     }
 }
