@@ -61,8 +61,8 @@ char* get_output(char *argv[]) {
 
     }
         waitpid(child_pid, &status, 0);
-        close(pipefd[0]);
         close(pipefd[1]);
+        close(pipefd[0]);
     return result;
     }
 }
