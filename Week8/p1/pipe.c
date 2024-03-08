@@ -50,6 +50,10 @@ char* get_output(char *argv[]) {
         close(pipefd[0]);
         close(pipefd[1]);
 
+        if (bytes_read <= 0){
+            return NULL;
+        }
+
         if (bytes_read == -1) {
             perror("read failed");
             return NULL;
