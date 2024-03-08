@@ -41,21 +41,21 @@ char* get_output(char *argv[]) {
         int status;
         close(pipefd[1]);
 
-    char buffer[1025];
-    int nbytes = read(pipefd[0], buffer, buf_size);
+    char buf[1025];
+    int nbytes = read(pipefd[0], buf, buf_size);
     if (nbytes == -1) {
         return NULL;
     }
-    buffer[1024] = 0;
-    char *output = strchr(buffer, '\n');
+    buf[1024] = 0;
+    char *output = strchr(buf, '\n');
     if (output != NULL) {
         *output = 0;
     }
-    char *result = malloc(strlen(buffer) + 20);
-    strcpy(result, buffer);
+    char *result = malloc(strlen(buf) + 20);
+    strcpy(result, buf);
 
     while(1) {
-        nbytes = read(pipefd[0], buffer, buf_size);
+        nbytes = read(pipefd[0], buf, buf_size);
         if (nbytes <= 0) {
             break;
         }
