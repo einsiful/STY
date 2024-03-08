@@ -43,29 +43,29 @@ char* get_output(char *argv[]) {
     }
     else {
         int status;
-
-        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
-
+        close(pipefd[1]);
+    char buf[buf_size];
+    int n = read(pipefd[0], buf, buf_size);
+    if (n<=0) {
+        perror("read failed");
+        return NULL;
+    }
+    buf[1024]=0;
+    char *nl = strchr(buf, '\n');
+    if (nl) {
+        *nl = 0;
+    }
+    strcpy(ptr, buf);
+    while(1){
+        n = read(pipefd[0], buffer, buf_size);
+        if (n<=0) {
+            break;
+        }
+    }
+        waitpid(child_pid, &status, 0);
         close(pipefd[0]);
         close(pipefd[1]);
-
-        if (bytes_read == -1) {
-            perror("read failed");
-            return NULL;
-        }
-
-        else{
-            int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
-                ptr[i] = buffer[i];
-            }
-            ptr[i] = '\0';
-        }
-    }
-
     return ptr;
     }
+}
 
