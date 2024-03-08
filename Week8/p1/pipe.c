@@ -37,7 +37,7 @@ char* get_output(char *argv[]) {
     }
     else {
         int status;
-        close(pipefd[1]);
+        waitpid(child_pid, &status, 0);
 
     char buffer[1025];
     int nbytes = read(pipefd[0], buffer, buf_size);
@@ -57,10 +57,9 @@ char* get_output(char *argv[]) {
     }
 
     result[i] = '\n';
-    waitpid(child_pid, &status, 0);
     close(pipefd[0]);
     close(pipefd[1]);
-    
+
     return result;
     }
 }
