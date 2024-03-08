@@ -52,20 +52,39 @@ char* get_output(char *argv[]) {
     strcpy(result, buffer);
 
     while(1){
-        nbytes = read(pipefd[0], buffer, buf_size);
-        if (nbytes == -1) {
-            return NULL;
-        }
-        if (nbytes == 0) {
-            break;
-        }
-        buffer[nbytes] = 0;
-        if (output != NULL) {
-            *output = 0;
-        }
-        result = realloc(result, strlen(result) + strlen(buffer) + 20);
-        strcat(result, buffer);
+        nbytes = read(pipefd[0], buffer, buf_size - 1); // Leave space for null terminator
+    if (nbytes == -1) {
+        // Handle error
+        free(result); // Avoid memory leak
+        return NULL;
     }
+    if (nbytes == 0) {
+        // No more data to read
+        break;
+    }
+    buffer[nbytes] = '\0'; // Properly null-terminate the new segment
+
+    // Process the buffer to replace '\n' with the desired character
+    // Here we simply ensure it's correctly terminated, adjust as needed.
+    for(int i = 0; i < nbytes; ++i) {
+        if(buffer[i] == '\n') {
+            buffer[i] = '-'; // Replace newline with '-', adjust this as needed
+        }
+    }
+
+    // Resize 'result' to accommodate the new segment
+    size_t current_len = strlen(result);
+    char *temp_result = realloc(result, current_len + nbytes + 1); // +1 for null terminator
+    if (temp_result == NULL) {
+        // Handle realloc failure
+        free(result); // Avoid memory leak
+        return NULL;
+    }
+    result = temp_result;
+
+    // Append the new segment to 'result'
+    strcat(result, buffer);
+}
     return result;
     }
 }
