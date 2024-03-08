@@ -50,24 +50,22 @@ char* get_output(char *argv[]) {
         close(pipefd[0]);
         close(pipefd[1]);
 
-        if (bytes_read <= 0){
-            return NULL;
-        }
 
         if (bytes_read == -1) {
             perror("read failed");
             return NULL;
         }
+        char *ptr = malloc(strlen(buffer) + 20);
+        strcpy(ptr, buffer);
 
-        else{
-            int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
-                ptr[i] = buffer[i];
+        while (bytes_read == buf_size) {
+            bytes_read = read(pipefd[0], buffer, buf_size);
+            if (bytes_read == -1) {
+                perror("read failed");
+                return NULL;
             }
-            ptr[i] = '\0';
+            ptr = realloc(ptr, strlen(ptr) + strlen(buffer) + 20);
+            strcat(ptr, buffer);
         }
     }
 
