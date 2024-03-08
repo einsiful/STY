@@ -46,7 +46,7 @@ char* get_output(char *argv[]) {
     if (nbytes == -1) {
         return NULL;
     }
-    buffer[nbytes] = 0;
+    buffer[1024] = 0;
     char *output = strchr(buffer, '\n');
     if (output != NULL) {
         *output = 0;
