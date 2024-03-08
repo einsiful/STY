@@ -50,10 +50,6 @@ char* get_output(char *argv[]) {
         close(pipefd[0]);
         close(pipefd[1]);
 
-        char *ptr = malloc(strlen(buffer) + 20);
-        strcpy(ptr, buffer);
-
-
         if (bytes_read == -1) {
             perror("read failed");
             return NULL;
@@ -69,7 +65,8 @@ char* get_output(char *argv[]) {
             }
             ptr[i] = '\0';
         }
-        return ptr;
     }
-}
+
+    return ptr;
+    }
 
