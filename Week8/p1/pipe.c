@@ -46,7 +46,7 @@ char* get_output(char *argv[]) {
         }
     }
     else {
-        int status;
+            int status;
         waitpid(child_pid, &status, 0);
 
         ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
@@ -61,14 +61,11 @@ char* get_output(char *argv[]) {
 
         else{
             int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
+            for (i = 0; i < buf_size && buffer[i] != '\0'; i++) {
                 ptr[i] = buffer[i];
             }
             ptr[i] = '\0';
-        }
+    }
     }
 
     return ptr;
