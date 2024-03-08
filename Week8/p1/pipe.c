@@ -53,10 +53,9 @@ char* get_output(char *argv[]) {
     strcpy(result, buffer);
 
     for (int i = 0; i < buf_size && buffer[i] != '\n'; i++){
-        if (buffer[i] == '\n') {
-            buffer[i] = 0;
-        }
+        result[i] = buffer[i];
     }
+    
     close(pipefd[0]);
     waitpid(child_pid, &status, 0);
     return result;
