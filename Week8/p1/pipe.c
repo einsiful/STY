@@ -52,15 +52,13 @@ char* get_output(char *argv[]) {
     char *result = malloc(strlen(buffer) + 20);
     strcpy(result, buffer);
 
-    for (int i = 0; i < 1024; i++) {
-        if (buffer[i] == 0) {
-            break;
-        }
+    for (int i = 0; i < 1024; i++ && buffer[i] != 0) {
         if (buffer[i] == '\n') {
-            buffer[i] = ' ';
+            buffer[i] = 0;
         }
     }
-
+    close(pipefd[0]);
+    waitpid(child_pid, &status, 0);
     return result;
     }
 }
