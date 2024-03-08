@@ -51,11 +51,13 @@ char* get_output(char *argv[]) {
     }
     char *result = malloc(strlen(buffer) + 20);
     strcpy(result, buffer);
-
-    for (int i = 0; i < buf_size && buffer[i] != '\n'; i++){
+    int i;
+    for (i = 0; i < buf_size && buffer[i] != '\n'; i++){
         result[i] = buffer[i];
     }
-    
+
+    result[i] = '\n';
+
     close(pipefd[0]);
     waitpid(child_pid, &status, 0);
     return result;
