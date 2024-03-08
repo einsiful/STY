@@ -16,6 +16,10 @@ char* get_output(char *argv[]) {
     char buffer[buf_size];
     char *ptr = malloc(buf_size);
 
+    if (argv == NULL) {
+        return NULL;
+    }
+
     if (ptr == NULL) {
         perror("malloc failed");
         return NULL;
