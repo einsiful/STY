@@ -13,8 +13,6 @@ char* get_output(char *argv[]) {
 
     int pipefd[2];
 
-    char buffer[buf_size];
-
     if (argv == NULL) {
         return NULL;
     }
@@ -41,21 +39,21 @@ char* get_output(char *argv[]) {
         int status;
         close(pipefd[1]);
 
-    char buf[1025];
-    int nbytes = read(pipefd[0], buf, buf_size);
+    char buffer[1025];
+    int nbytes = read(pipefd[0], buffer, buf_size);
     if (nbytes == -1) {
         return NULL;
     }
-    buf[1024] = 0;
-    char *output = strchr(buf, '\n');
+    buffer[1024] = 0;
+    char *output = strchr(buffer, '\n');
     if (output != NULL) {
         *output = 0;
     }
-    char *result = malloc(strlen(buf) + 20);
-    strcpy(result, buf);
+    char *result = malloc(strlen(buffer) + 20);
+    strcpy(result, buffer);
 
     while(1) {
-        nbytes = read(pipefd[0], buf, buf_size);
+        nbytes = read(pipefd[0], buffer, buf_size);
         if (nbytes <= 0) {
             break;
         }
