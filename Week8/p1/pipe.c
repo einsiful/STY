@@ -37,6 +37,7 @@ char* get_output(char *argv[]) {
     }
     else {
         int status;
+        close(pipefd[1]);
         waitpid(child_pid, &status, 0);
 
     char buffer[1025];
@@ -57,10 +58,10 @@ char* get_output(char *argv[]) {
     }
 
     result[i] = '\n';
-    result[i+1] = '\0';
     waitpid(child_pid, &status, 0);
     close(pipefd[0]);
     close(pipefd[1]);
+    
     return result;
     }
 }
