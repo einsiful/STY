@@ -60,11 +60,10 @@ char* get_output(char *argv[]) {
             break;
         }
         buffer[nbytes] = 0;
-        output = strchr(buffer, '\n');
         if (output != NULL) {
             *output = 0;
         }
-        result = realloc(result, strlen(result) + strlen(buffer) + 1);
+        result = realloc(result, strlen(result) + strlen(buffer) + 20);
         strcat(result, buffer);
     }
     return result;
