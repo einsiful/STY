@@ -41,7 +41,7 @@ char* get_output(char *argv[]) {
         int status;
         close(pipefd[1]);
 
-    buffer[1025];
+    char buffer[1025];
     int nbytes = read(pipefd[0], buffer, buf_size);
     if (nbytes == -1) {
         return NULL;
