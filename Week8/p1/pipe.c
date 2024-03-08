@@ -32,7 +32,6 @@ char* get_output(char *argv[]) {
         close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
         execvp(argv[0], argv);
-        perror("execvp failed");
         exit(255);
     }
     else {
