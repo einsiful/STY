@@ -41,15 +41,20 @@ char* get_output(char *argv[]) {
         close(pipefd[1]);
         int status;
         waitpid(child_pid, &status, 0);
-        int bytes = read(pipefd[0], buffer, buf_size);
-        if (bytes == -1) {
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            int n = read(pipefd[0], buffer, buf_size);
+            if (n == -1) {
+                close(pipefd[0]);
+                return NULL;
+            }
+            buffer[n] = '\0';
+            char* result = strdup(buffer);
+            close(pipefd[0]);
+            return result;
+        }
+        else {
             close(pipefd[0]);
             return NULL;
         }
-        buffer[bytes] = '\0';
-        close(pipefd[0]);
     }
-
-    return strdup(buffer);
 }
-
