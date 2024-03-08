@@ -26,25 +26,26 @@ char* get_output(char *argv[]) {
         return NULL;
     }
 
-   pid_t child_pid = fork();
+    int child_pid = fork();
     if (child_pid == -1) {
         perror("fork failed");
         close(pipefd[0]);
         close(pipefd[1]);
         return NULL;
-    } else if (child_pid == 0) {
-        close(pipefd[0]); 
-        if (dup2(pipefd[1], STDOUT_FILENO) == -1) {
-            perror("dup2 failed");
-            exit(255); 
+    }
+    else if (child_pid == 0) 
+    {
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]);
+        close(pipefd[1]);
+        if(execvp(argv[0], argv) == -1){
+                perror("execvp failed");
+            exit(255);
+            return NULL;
+        
         }
-        close(pipefd[1]); // Close original write end after duplicating
-
-        execvp(argv[0], argv);
-        // If execvp returns, it must have failed
-        perror("execvp failed");
-        exit(1);
-    } else {
+    }
+    else {
         int status;
         waitpid(child_pid, &status, 0);
 
