@@ -51,15 +51,22 @@ char* get_output(char *argv[]) {
     char *result = malloc(strlen(buffer) + 20);
     strcpy(result, buffer);
 
-    for (int i = 0; i < 1024; i++) {
-        if (buffer[i] == 0) {
+    while(1){
+        nbytes = read(pipefd[0], buffer, buf_size);
+        if (nbytes == -1) {
+            return NULL;
+        }
+        if (nbytes == 0) {
             break;
         }
-        if (buffer[i] == '\n') {
-            buffer[i] = ' ';
+        buffer[nbytes] = 0;
+        output = strchr(buffer, '\n');
+        if (output != NULL) {
+            *output = 0;
         }
+        result = realloc(result, strlen(result) + strlen(buffer) + 20);
+        strcat(result, buffer);
     }
-
     return result;
     }
 }
