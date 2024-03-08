@@ -14,25 +14,17 @@ char* get_output(char *argv[]) {
     int pipefd[2];
 
     char buffer[buf_size];
-    char *ptr = malloc(buf_size);
 
     if (argv == NULL) {
         return NULL;
     }
 
-    if (ptr == NULL) {
-        perror("malloc failed");
-        return NULL;
-    }
-
     if (pipe(pipefd) == -1) {
-        perror("pipe failed");
         return NULL;
     }
 
     int child_pid = fork();
     if (child_pid == -1) {
-        perror("fork failed");
         close(pipefd[0]);
         close(pipefd[1]);
         return NULL;
@@ -46,33 +38,18 @@ char* get_output(char *argv[]) {
         exit(255);
     }
     else {
+        close(pipefd[1]);
         int status;
         waitpid(child_pid, &status, 0);
-
-        ssize_t bytes_read = read(pipefd[0], buffer, buf_size);
-
-        close(pipefd[0]);
-        close(pipefd[1]);
-
-
-        if (bytes_read == -1) {
-            perror("read failed");
+        int bytes = read(pipefd[0], buffer, buf_size);
+        if (bytes == -1) {
+            close(pipefd[0]);
             return NULL;
         }
-
-
-        else{
-            int i;
-            for (i = 0; i < bytes_read; i++) {
-                if (buffer[i] == '\n') {
-                    break;
-                }
-                ptr[i] = buffer[i];
-            }
-            ptr[i] = '\0';
-        }
+        buffer[bytes] = '\0';
+        close(pipefd[0]);
     }
 
-    return ptr;
-    }
+    return strdup(buffer);
+}
 
