@@ -36,7 +36,6 @@ char* get_output(char *argv[]) {
         exit(255);
     }
     else {
-        int status;
         close(pipefd[1]);
 
     char buffer[1025];
