@@ -40,12 +40,13 @@ char* get_output(char *argv[]) {
     else {
         int status;
         close(pipefd[1]);
-        
-    buffer[1025] = 0;
+
+    buffer[1025];
     int nbytes = read(pipefd[0], buffer, buf_size);
     if (nbytes == -1) {
         return NULL;
     }
+    buffer[nbytes] = 0;
     char *output = strchr(buffer, '\n');
     if (output != NULL) {
         *output = 0;
