@@ -67,6 +67,5 @@ char* get_output(char *argv[]) {
         result = realloc(result, strlen(result) + strlen(buffer) + 20);
         strcat(result, buffer);
     }
-    return result;
     }
 }
