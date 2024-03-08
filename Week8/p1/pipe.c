@@ -52,7 +52,7 @@ char* get_output(char *argv[]) {
     char *result = malloc(strlen(buffer) + 20);
     strcpy(result, buffer);
 
-    for (int i = 0; i < 1024; i++ && buffer[i] != 0) {
+    for (int i = 0; i < buf_size && buffer[i] != '\n'; i++){
         if (buffer[i] == '\n') {
             buffer[i] = 0;
         }
