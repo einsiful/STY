@@ -2,3 +2,4 @@ trace-compile-scheduler.txt
 *venv/
 *.zip
 .DS_Store
+.vscode
