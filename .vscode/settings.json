@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.rmd": "markdown",
+        "message_queue.h": "c",
+        "fcntl.h": "c"
+    }
+}

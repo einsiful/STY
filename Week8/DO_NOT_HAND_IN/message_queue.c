@@ -95,11 +95,11 @@ int sendMulTask(mqd_t client, int operand1, int operand2)
 
 int stopClient(mqd_t client)
 {
-    if (mq_close(client) == -1) {
-        perror("mq_close failed to close the message queue previously created by the server");
+    mq_close(client);
+    if (mq_unlink("/client") == -1) {
+        perror("mq_unlink failed to unlink the message queue");
         return -1;
     }
-    
     return 0;
 }
 
