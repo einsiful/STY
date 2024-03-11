@@ -37,7 +37,7 @@ typedef struct _Message {
 mqd_t startClient(void)
 {
     // TODO: Open the message queue previously created by the server
-    return -1;
+    return mq_open(QUEUE_NAME, O_WRONLY);
 }
 
 int sendExitTask(mqd_t client)
@@ -73,7 +73,10 @@ int stopClient(mqd_t client)
     (void)client;
 
     // TODO: Clean up anything on the client-side
-    return -1;
+    if ((mq_close(client) == -1) || (mq_unlink(client == -1))){
+        return -1;
+    };
+    return 0;
 
 }
 
@@ -92,8 +95,9 @@ int runServer(void)
     // TODO:
     // Create and open the message queue. Server only needs to read from it.
     // Clients only need to write to it, allow for all users.
-    mqd_t server = -1;
+    mqd_t server = mq_open(QUEUE_NAME, O_RDONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, &attr);
     if(server == -1) {
+        perror("mq_open");
 	    return -1;
     }
 
@@ -103,6 +107,7 @@ int runServer(void)
     do {
         // Attempt to receive a message from the queue.
         ssize_t received = mq_receive(server, (char*)&msg, sizeof(msg), NULL);
+
         if (received != sizeof(msg)) {
             // This implicitly also checks for error (i.e., -1)
             hadError = 1;
@@ -140,6 +145,10 @@ int runServer(void)
 
     // TODO
     // Close the message queue on exit and unlink it
+    if (stopClient(QUEUE_NAME) == -1){
+        hadError = 1;
+    };
 
     return hadError ? -1 : 0;
 }
+//{}
