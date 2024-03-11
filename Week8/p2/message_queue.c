@@ -57,7 +57,7 @@ int sendAddTask(mqd_t client, int operand1, int operand2)
     msg.command = CmdExit;
     msg.parameter1 = operand1;
     msg.parameter2 = operand2;
-    return mq_send(client, (char*)&msg, sizeof(msg), 0);
+    return mq_send(client, (const char*)&msg, sizeof(msg), 0);
 }
 
 int sendMulTask(mqd_t client, int operand1, int operand2)
@@ -68,7 +68,7 @@ int sendMulTask(mqd_t client, int operand1, int operand2)
     msg.command = CmdExit;
     msg.parameter1 = operand1;
     msg.parameter2 = operand2;
-    return mq_send(client, (char*)&msg, sizeof(msg), 0);
+    return mq_send(client, (const char*)&msg, sizeof(msg), 0);
 }
 
 int stopClient(mqd_t client)
