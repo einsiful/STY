@@ -52,10 +52,10 @@ int sendExitTask(mqd_t client)
 int sendAddTask(mqd_t client, int operand1, int operand2)
 {
     Message msg;
-    msg.command    = CmdAdd;
+    msg.command = CmdAdd;
     msg.parameter1 = operand1;
     msg.parameter2 = operand2;
-    return mq_send(client, (char*)&msg, sizeof(msg), 0);
+    return mq_send(client, (const char*)&msg, sizeof(msg), 0);
 }
 
 int sendMulTask(mqd_t client, int operand1, int operand2)
@@ -63,7 +63,7 @@ int sendMulTask(mqd_t client, int operand1, int operand2)
 
     // TODO: Send the mul command with the operands
     Message msg;
-    msg.command = CmdExit;
+    msg.command = CmdMul;
     msg.parameter1 = operand1;
     msg.parameter2 = operand2;
     if (mq_send(client, (const char*)&msg, sizeof(msg), 0) == -1) {
