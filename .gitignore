@@ -3,3 +3,4 @@ trace-compile-scheduler.txt
 *.zip
 .DS_Store
 .vscode
+DO_NOT_HAND_IN/*
