@@ -42,30 +42,33 @@ mqd_t startClient(void)
 
 int sendExitTask(mqd_t client)
 {
-    (void)client;
 
     // TODO: Send the exit command to the server.
-    return -1;
+    Message msg;
+    msg.command = CmdExit;
+    return mq_send(client, (char*)&msg, sizeof(msg), 0);
 }
 
 int sendAddTask(mqd_t client, int operand1, int operand2)
 {
-    (void)client;
-    (void)operand1;
-    (void)operand2;
 
     // TODO: Send the add command with the operands
-    return -1;
+    Message msg;
+    msg.command = CmdExit;
+    msg.parameter1 = operand1;
+    msg.parameter2 = operand2;
+    return mq_send(client, (char*)&msg, sizeof(msg), 0);
 }
 
 int sendMulTask(mqd_t client, int operand1, int operand2)
 {
-    (void)client;
-    (void)operand1;
-    (void)operand2;
 
     // TODO: Send the mul command with the operands
-    return -1;
+    Message msg;
+    msg.command = CmdExit;
+    msg.parameter1 = operand1;
+    msg.parameter2 = operand2;
+    return mq_send(client, (char*)&msg, sizeof(msg), 0);
 }
 
 int stopClient(mqd_t client)
@@ -73,7 +76,7 @@ int stopClient(mqd_t client)
     (void)client;
 
     // TODO: Clean up anything on the client-side
-    if ((mq_close(client) == -1) || (mq_unlink(client == -1))){
+    if ((mq_close(client) == -1) || (mq_unlink(QUEUE_NAME) == -1)){
         return -1;
     };
     return 0;
@@ -97,9 +100,8 @@ int runServer(void)
     // Clients only need to write to it, allow for all users.
     mqd_t server = mq_open(QUEUE_NAME, O_RDONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, &attr);
     if(server == -1) {
-        perror("mq_open");
 	    return -1;
-    }
+    };
 
 
     // This is the implementation of the server part, already completed:
@@ -145,7 +147,7 @@ int runServer(void)
 
     // TODO
     // Close the message queue on exit and unlink it
-    if (stopClient(QUEUE_NAME) == -1){
+    if (stopClient(server) == -1){
         hadError = 1;
     };
 
