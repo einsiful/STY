@@ -36,14 +36,11 @@ typedef struct _Message {
 
 mqd_t startClient(void)
 {
-    // TODO: Open the message queue previously created by the server
     return mq_open(QUEUE_NAME, O_WRONLY);
 }
 
 int sendExitTask(mqd_t client)
 {
-
-    // TODO: Send the exit command to the server.
     Message msg;
     msg.command = CmdExit;
     return mq_send(client, (char*)&msg, sizeof(msg), 0);
@@ -60,8 +57,6 @@ int sendAddTask(mqd_t client, int operand1, int operand2)
 
 int sendMulTask(mqd_t client, int operand1, int operand2)
 {
-
-    // TODO: Send the mul command with the operands
     Message msg;
     msg.command = CmdMul;
     msg.parameter1 = operand1;
@@ -77,7 +72,6 @@ int stopClient(mqd_t client)
 {
     (void)client;
 
-    // TODO: Clean up anything on the client-side
     if ((mq_close(client) == -1) || (mq_unlink(QUEUE_NAME) == -1)){
         return -1;
     };
@@ -97,17 +91,12 @@ int runServer(void)
     attr.mq_curmsgs = 0;
     (void) attr;
 
-    // TODO:
-    // Create and open the message queue. Server only needs to read from it.
-    // Clients only need to write to it, allow for all users.
     mqd_t server = mq_open(QUEUE_NAME, O_RDONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, &attr);
     if(server == -1) {
 	    return -1;
     };
 
 
-    // This is the implementation of the server part, already completed:
-    // TODO: You may have to make minor extensions in order to satisfy all requirements
     do {
         // Attempt to receive a message from the queue.
         ssize_t received = mq_receive(server, (char*)&msg, sizeof(msg), NULL);
@@ -155,4 +144,3 @@ int runServer(void)
 
     return hadError ? -1 : 0;
 }
-//{}
