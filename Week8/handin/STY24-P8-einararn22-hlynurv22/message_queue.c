@@ -135,6 +135,9 @@ int runServer(void)
         }
     } while (!didExit);
 
+
+    // TODO
+    // Close the message queue on exit and unlink it
     if (stopClient(server) == -1){
         hadError = 1;
     };
