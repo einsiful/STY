@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 // add debug output if set to 1
-#define DEBUG 0
+#define DEBUG 1
 
 /*
  * This is the heap you should use.
