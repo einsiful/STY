@@ -76,6 +76,7 @@ void dumpAllocator()
 			current->size);
 
 		current = current->next;
+
 	}
 
 	pthread_mutex_unlock(&mutex);
@@ -180,10 +181,12 @@ void merge_blocks(Block *block1, Block *block2)
 void my_free(void *address)
 {
 	// If address is NULL, do nothing and just return
-	if(address==NULL) return;
+	if(address == NULL) {
+		return;
+	}
 
 	// Derive the allocation block from the address
-	Block *block = (Block *)( (char *)address - HEADER_SIZE );
+	Block *block = (Block *)((char *)address - HEADER_SIZE);
 
 	// Insert block into freelist
 	Block *freeblock = _firstFreeBlock;
@@ -197,9 +200,9 @@ void my_free(void *address)
 			freeblock = freeblock->next;
 		}
 		// This if is not really necessary....
-		if(freeblock->next == NULL) {  // append at the end
-			block->next = NULL;
-			freeblock->next = block;
+		if(freeblock->next == NULL || freeblock->next > block) {  // append at the end or insert in the middle
+    		block->next = freeblock->next;
+    		freeblock->next = block;
 		} else {
 			// freeblock is before block, freeblock->next is after block, so insert in the middle
 			block->next = freeblock->next;
