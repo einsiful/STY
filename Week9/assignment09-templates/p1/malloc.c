@@ -172,9 +172,10 @@ void merge_blocks(Block *block1, Block *block2)
 	}
 	assert(block1->next == block2); // This really should be the case :)
 		
-
-	block1->size += block2->size;
-	block1->next = block2->next;
+	if(block1->next == block2) {
+		block1->size += block2->size;
+		block1->next = block2->next;
+	}
 }
 
 
