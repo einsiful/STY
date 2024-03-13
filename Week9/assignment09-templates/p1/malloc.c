@@ -48,6 +48,7 @@ static Block *_getNextBlockBySize(const Block *current)
  */
 void dumpAllocator()
 {
+	pthread_mutex_lock(&mutex);
 	Block *current;
 	/* Note: This sample code prints addresses relative to the beginning of the heap */
 
@@ -73,6 +74,8 @@ void dumpAllocator()
 
 		current = current->next;
 	}
+
+	pthread_mutex_unlock(&mutex);
 }
 
 /*
