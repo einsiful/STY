@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <pthread.h>
 
 // add debug output if set to 1
 #define DEBUG 0
@@ -12,9 +13,12 @@
  */
 uint8_t __attribute__ ((aligned(HEADER_SIZE))) _heapData[HEAP_SIZE];
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /*
  * This should point to the first free block in memory.
  */
+
 Block *_firstFreeBlock;
 
 /*
@@ -123,6 +127,7 @@ static void *allocate_block(Block **update_next, Block *block, uint64_t new_size
 
 void *my_malloc(uint64_t size)
 {
+	pthread_mutex_lock(&mutex);
 	/* round the requested size up to the next larger multiple of 16, and add header */
 	size = roundUp(size) + HEADER_SIZE;
 
@@ -138,10 +143,13 @@ void *my_malloc(uint64_t size)
 	}
 	/* free list is empty or there is no block that is large enough */
 	if(block == NULL) {
+		pthread_mutex_unlock(&mutex);
 		return NULL;
 	}
 
-	return allocate_block(prevptr, block, size);
+	void *result = allocate_block(prevptr, block, size);
+	pthread_mutex_unlock(&mutex);
+	return result;
 }
 
 
