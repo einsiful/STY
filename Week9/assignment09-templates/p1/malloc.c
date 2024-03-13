@@ -196,23 +196,17 @@ void my_free(void *address)
 		merge_blocks(block, block->next);
 	} else {
 		// blocks that are before our new free block
-		while(freeblock->next < block && freeblock->next != NULL) {
+		while(freeblock->next != NULL && freeblock->next < block) {
 			freeblock = freeblock->next;
 		}
-		// This if is not really necessary....
-		if(freeblock->next == NULL || freeblock->next > block) {  // append at the end or insert in the middle
-    		block->next = freeblock->next;
-    		freeblock->next = block;
-		} else {
-			// freeblock is before block, freeblock->next is after block, so insert in the middle
-			block->next = freeblock->next;
-			freeblock->next = block;
+		block->next = freeblock->next;
+		freeblock->next = block;
+		if (block->next != NULL) {
+			merge_blocks(block, block->next);
 		}
-		// merge with next block if neighbours
-		// (block->next can be null, but then merge_blocks simply does nothing)
-		merge_blocks(block, block->next);
-		// merge with next block if neighbours
-		merge_blocks(freeblock, block);
+		if(freeblock != NULL) {
+			merge_blocks(freeblock, block);
+		}
 	}
 }
 
