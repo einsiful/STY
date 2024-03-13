@@ -7,6 +7,7 @@
 // add debug output if set to 1
 #define DEBUG 0
 
+
 /*
  * This is the heap you should use.
  * The heap does not grow.
@@ -25,17 +26,12 @@ Block *_firstFreeBlock;
 /*
  * Initializes the memory block. You don't need to change this.
  */
+
 void initAllocator()
 {
 	_firstFreeBlock = (Block*)&_heapData[0];
 	_firstFreeBlock->next = NULL;
 	_firstFreeBlock->size = HEAP_SIZE;
-
-	pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&mutex, &attr);
-    pthread_mutexattr_destroy(&attr);
 }
 
 /*
