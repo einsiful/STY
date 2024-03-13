@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 // add debug output if set to 1
-#define DEBUG 1
+#define DEBUG 0
 
 /*
  * This is the heap you should use.
@@ -14,6 +14,7 @@
 uint8_t __attribute__ ((aligned(HEADER_SIZE))) _heapData[HEAP_SIZE];
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 /*
  * This should point to the first free block in memory.
@@ -29,6 +30,12 @@ void initAllocator()
 	_firstFreeBlock = (Block*)&_heapData[0];
 	_firstFreeBlock->next = NULL;
 	_firstFreeBlock->size = HEAP_SIZE;
+
+	pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&mutex, &attr);
+    pthread_mutexattr_destroy(&attr);
 }
 
 /*
