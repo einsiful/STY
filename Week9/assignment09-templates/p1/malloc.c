@@ -181,36 +181,42 @@ void merge_blocks(Block *block1, Block *block2)
 
 void my_free(void *address)
 {
-	// If address is NULL, do nothing and just return
-	if(address == NULL) {
-		pthread_mutex_unlock(&mutex);
-		return;
-	}
+    // Lock the mutex at the beginning of the function
+    pthread_mutex_lock(&mutex);
 
-	// Derive the allocation block from the address
-	Block *block = (Block *)((char *)address - HEADER_SIZE);
+    // If address is NULL, unlock the mutex and return
+    if(address == NULL) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
 
-	// Insert block into freelist
-	Block *freeblock = _firstFreeBlock;
-	if(block < freeblock) { // insert at beginning
-		block->next = _firstFreeBlock;
-		_firstFreeBlock = block;	
-		merge_blocks(block, block->next);
-	} else {
-		// blocks that are before our new free block
-		while(freeblock->next != NULL && freeblock->next < block) {
-			freeblock = freeblock->next;
-		}
-		block->next = freeblock->next;
-		freeblock->next = block;
-		if (block->next != NULL) {
-			merge_blocks(block, block->next);
-		}
-		if(freeblock != NULL) {
-			merge_blocks(freeblock, block);
-		}
-	}
-	
+    // Your existing logic to handle the block free operation
+    // Derive the allocation block from the address
+    Block *block = (Block *)((char *)address - HEADER_SIZE);
+
+    // Insert block into freelist
+    Block *freeblock = _firstFreeBlock;
+    if(block < freeblock) { // insert at beginning
+        block->next = _firstFreeBlock;
+        _firstFreeBlock = block;  
+        merge_blocks(block, block->next);
+    } else {
+        // blocks that are before our new free block
+        while(freeblock->next != NULL && freeblock->next < block) {
+            freeblock = freeblock->next;
+        }
+        block->next = freeblock->next;
+        freeblock->next = block;
+        if (block->next != NULL) {
+            merge_blocks(block, block->next);
+        }
+        if(freeblock != NULL) {
+            merge_blocks(freeblock, block);
+        }
+    }
+
+    // Unlock the mutex before returning from the function
+    pthread_mutex_unlock(&mutex);
 }
 
 
