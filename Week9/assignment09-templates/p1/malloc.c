@@ -144,7 +144,7 @@ void *my_malloc(uint64_t size)
 		if(block->size >= size) { // large enough
 			break;
 		}
-	prevptr = &(block->next);
+		prevptr = &(block->next);
 		block = block->next;
 	}
 	/* free list is empty or there is no block that is large enough */
