@@ -143,6 +143,7 @@ void *my_malloc(uint64_t size)
 	Block **prevptr = &_firstFreeBlock;
 	while(block != NULL) {
 		if(block->size >= size) { // large enough
+			pthread_mutex_unlock(&mutex);
 			break;
 		}
 	prevptr = &(block->next);
@@ -209,6 +210,8 @@ void my_free(void *address)
 			merge_blocks(freeblock, block);
 		}
 	}
+
+	
 }
 
 
