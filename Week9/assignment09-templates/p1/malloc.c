@@ -149,7 +149,6 @@ void *my_malloc(uint64_t size)
 	}
 	/* free list is empty or there is no block that is large enough */
 	if(block == NULL) {
-		pthread_mutex_unlock(&mutex);
 		return NULL;
 	}
 
@@ -183,7 +182,6 @@ void my_free(void *address)
     pthread_mutex_lock(&mutex);
 
     if(address == NULL) {
-        pthread_mutex_unlock(&mutex);
         return;
     }
 
