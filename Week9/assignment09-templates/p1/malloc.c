@@ -126,7 +126,9 @@ static void *allocate_block(Block **update_next, Block *block, uint64_t new_size
 
 	*update_next = newfree;
 #if DEBUG
+	pthread_mutex_unlock(&mutex);
 	dumpAllocator();
+	pthread_mutex_lock(&mutex);
 #endif
 	return &(block->data[0]);
 }
