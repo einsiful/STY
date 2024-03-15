@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 // add debug output if set to 1
-#define DEBUG 1
+#define DEBUG 0
 
 
 /*
