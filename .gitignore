@@ -2,5 +2,6 @@ trace-compile-scheduler.txt
 *venv/
 *.zip
 .DS_Store
+*.DS_Store
 .vscode
 DO_NOT_HAND_IN/*
