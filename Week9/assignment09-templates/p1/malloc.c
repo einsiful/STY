@@ -183,6 +183,7 @@ void my_free(void *address)
 {
 	// If address is NULL, do nothing and just return
 	if(address == NULL) {
+		pthread_mutex_unlock(&mutex);
 		return;
 	}
 
@@ -209,9 +210,6 @@ void my_free(void *address)
 			merge_blocks(freeblock, block);
 		}
 	}
-	pthread_mutex_unlock(&mutex);
-	return;
-
 	
 }
 
