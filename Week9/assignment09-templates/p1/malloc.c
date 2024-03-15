@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 // add debug output if set to 1
-#define DEBUG 0
+#define DEBUG 1
 
 
 /*
@@ -124,7 +124,6 @@ static void *allocate_block(Block **update_next, Block *block, uint64_t new_size
 	newfree->next = block->next;
 	block->magic = ALLOCATED_BLOCK_MAGIC;
 
-	// update the previous free pointer to the new free block
 	*update_next = newfree;
 #if DEBUG
 	dumpAllocator();
@@ -181,27 +180,21 @@ void merge_blocks(Block *block1, Block *block2)
 
 void my_free(void *address)
 {
-    // Lock the mutex at the beginning of the function
     pthread_mutex_lock(&mutex);
 
-    // If address is NULL, unlock the mutex and return
     if(address == NULL) {
         pthread_mutex_unlock(&mutex);
         return;
     }
 
-    // Your existing logic to handle the block free operation
-    // Derive the allocation block from the address
     Block *block = (Block *)((char *)address - HEADER_SIZE);
 
-    // Insert block into freelist
     Block *freeblock = _firstFreeBlock;
-    if(block < freeblock) { // insert at beginning
+    if(block < freeblock) {
         block->next = _firstFreeBlock;
         _firstFreeBlock = block;  
         merge_blocks(block, block->next);
     } else {
-        // blocks that are before our new free block
         while(freeblock->next != NULL && freeblock->next < block) {
             freeblock = freeblock->next;
         }
@@ -214,8 +207,6 @@ void my_free(void *address)
             merge_blocks(freeblock, block);
         }
     }
-
-    // Unlock the mutex before returning from the function
     pthread_mutex_unlock(&mutex);
 }
 
