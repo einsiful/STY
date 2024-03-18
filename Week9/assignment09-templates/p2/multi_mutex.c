@@ -10,13 +10,13 @@ int multi_mutex_unlock(pthread_mutex_t **mutexv, int mutexc) {
         return -1;
     }
 
-    int ret = 0;
+    int ret_val = 0;
     for (int i = 0; i < mutexc; ++i) {
         if (pthread_mutex_unlock(mutexv[i]) != 0) {
-            ret = -1;
+            ret_val = -1;
         }
     }
-    return ret;
+    return ret_val;
 }
 
 int multi_mutex_trylock(pthread_mutex_t **mutexv, int mutexc) {
@@ -27,7 +27,6 @@ int multi_mutex_trylock(pthread_mutex_t **mutexv, int mutexc) {
     int i;
     for (i = 0; i < mutexc; ++i) {
         if (pthread_mutex_trylock(mutexv[i]) != 0) {
-
             while (--i >= 0) {
                 pthread_mutex_unlock(mutexv[i]);
             }
