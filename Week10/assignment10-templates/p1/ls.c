@@ -25,50 +25,44 @@
 int list(const char* path, int recursive)
 {
     (void) recursive; // Ignored in the current implementation
-    DIR* opened_directory = opendir(path);
-    if (!opened_directory) {
+    DIR* dir = opendir(path);
+    if (!dir) {
         perror("Failed to open directory");
         return -1;
     }
 
-    struct dirent* new_file;
-    while ((new_file = readdir(opened_directory)) != NULL) {
-        if (new_file->d_name[0] == '.') continue; // Skip hidden files
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') continue; // Skip hidden files
 
-        char full_path_and_name[PATH_MAX];
-        snprintf(full_path_and_name, PATH_MAX, "%s/%s", path, new_file->d_name);
+        char fullPath[PATH_MAX];
+        snprintf(fullPath, PATH_MAX, "%s/%s", path, entry->d_name);
 
-        struct stat new_file_statistics;
-        if (fstatat(dirfd(opened_directory), new_file->d_name, &new_file_statistics, AT_SYMLINK_NOFOLLOW) != 0) {
-            perror("Failed to get file statistics");
-            closedir(opened_directory);
+        struct stat fileInfo;
+        if (lstat(fullPath, &fileInfo) != 0) {
+            perror("Failed to get file information");
+            closedir(dir);
             return -1;
         }
 
-        char type_str[PATH_MAX] = ""; // Initialize to empty string
-        if (new_file->d_type == DT_FIFO) {
-            strcpy(type_str, "|");
-        } else if (new_file->d_type == DT_DIR) {
-            strcpy(type_str, "/");
-        } else if (new_file->d_type == DT_LNK) {
-            ssize_t link_size = readlink(full_path_and_name, type_str, sizeof(type_str) - 4); // Leave space for " -> "
-            if (link_size >= 0) {
-                type_str[link_size] = '\0'; // Null-terminate the result
-                memmove(type_str + 4, type_str, strlen(type_str) + 1); // Shift to make space for " -> "
-                memcpy(type_str, " -> ", 4); // Prepend " -> "
+        char typeStr[PATH_MAX] = ""; // Large enough for " -> " + PATH_MAX
+        if (S_ISDIR(fileInfo.st_mode)) strcpy(typeStr, "/");
+        else if (S_ISFIFO(fileInfo.st_mode)) strcpy(typeStr, "|");
+        else if (S_ISLNK(fileInfo.st_mode)) {
+            ssize_t len = readlink(fullPath, typeStr + 4, sizeof(typeStr) - 4 - 1);
+            if (len != -1) {
+                memcpy(typeStr, " -> ", 4);
+                typeStr[len + 4] = '\0'; // Ensure null-termination
             } else {
-                perror("Failed to read symlink");
-                closedir(opened_directory);
+                perror("Failed to read symlink target");
+                closedir(dir);
                 return -1;
             }
-        } else if (new_file_statistics.st_mode & S_IXUSR) {
-            strcpy(type_str, "*");
-        }
+        } else if (fileInfo.st_mode & S_IXUSR) strcpy(typeStr, "*");
 
-        _printLine(new_file_statistics.st_size, full_path_and_name, type_str);
+        _printLine(fileInfo.st_size, fullPath, typeStr);
     }
 
-    closedir(opened_directory);
-	free(new_file);
+    closedir(dir);
     return 0;
 }
