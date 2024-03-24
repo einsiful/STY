@@ -72,7 +72,7 @@ int doCopy(CopyArgs* args) {
 		exit(3);
 	}
 
-	while (1) {
+	while ((rd_count = read(in_fd, buffer, BUF_SIZE)) > 0) {
 		rd_count = read(in_fd, buffer, BUF_SIZE);
 		if (rd_count <= 0) {
 			break;
