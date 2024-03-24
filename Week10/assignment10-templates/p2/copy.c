@@ -62,7 +62,6 @@ int doCopy(CopyArgs *args) {
         return -1;
     }
 
-    // Fetch the source file's permissions to replicate them for the destination file.
     struct stat source_stat;
     if (fstat(fd_from, &source_stat) != 0) {
         perror("Failed to get source file permissions");
@@ -70,7 +69,6 @@ int doCopy(CopyArgs *args) {
         return -1;
     }
 
-    // Using source file's permissions masked with 0777 to clean permission bits.
     int fd_to = open(args->to, O_WRONLY | O_CREAT | O_EXCL, source_stat.st_mode & 0777);
     if (fd_to == -1) {
         perror("Error opening destination file");
@@ -97,9 +95,7 @@ int doCopy(CopyArgs *args) {
         }
 
         if (is_zero) {
-            // Use lseek to create a sparse block.
-            off_t result = lseek(fd_to, bytes_read, SEEK_CUR);
-            if (result == (off_t)-1) {
+            if (lseek(fd_to, bytes_read, SEEK_CUR) == -1) {
                 perror("lseek error");
                 free(buffer);
                 close(fd_from);
@@ -125,6 +121,7 @@ int doCopy(CopyArgs *args) {
         return -1;
     }
 
+    free(buffer);
     close(fd_from);
     close(fd_to);
     return 0;
