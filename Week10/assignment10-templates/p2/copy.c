@@ -52,66 +52,44 @@ int parseCopyArgs(int argc, char * const argv[], CopyArgs* args)
 
 
 int doCopy(CopyArgs* args) {
-    if (args == NULL || args->from == NULL || args->to == NULL || args->blocksize <= 0) {
-        return -1; // Validate args and ensure blocksize is positive
-    }
-
-    int in_fd, out_fd, rd_count, wt_count;
-    // Allocate the buffer dynamically based on args->blocksize
-    char *buffer = (char *)malloc(args->blocksize);
-    if (buffer == NULL) {
-        perror("Failed to allocate memory for buffer");
+    if (args == NULL) {
         return -1;
     }
 
-    // Open the source file
-    in_fd = open(args->from, O_RDONLY);
-    if (in_fd < 0) {
-        perror("Error opening source file");
-        free(buffer);
-        return -2;
-    }
+#define BUF_SIZE 4096
 
+    int in_fd, out_fd, rd_count, wt_count;
+    char buffer[BUF_SIZE];
     struct stat stat_buf;
-    // Get the source file's permissions
+
+    /* Open the source file */
+    in_fd = open(args->from, O_RDONLY);
+    if (in_fd < 0) return -2;
+
+    /* Get the source file's permissions */
     if (fstat(in_fd, &stat_buf) != 0) {
-        perror("Failed to get source file permissions");
         close(in_fd);
-        free(buffer);
         return -3;
     }
 
-    // Create the destination file with source file's permissions
+    /* Create the destination file with source file's permissions */
     out_fd = open(args->to, O_WRONLY | O_CREAT | O_EXCL, stat_buf.st_mode & 0777);
     if (out_fd < 0) {
-        perror("Error opening destination file");
         close(in_fd);
-        free(buffer);
         return -4;
     }
 
-    while ((rd_count = read(in_fd, buffer, args->blocksize)) > 0) {
+    while ((rd_count = read(in_fd, buffer, BUF_SIZE)) > 0) {
         wt_count = write(out_fd, buffer, rd_count);
         if (wt_count <= 0) {
-            perror("Failed to write to destination file");
             close(in_fd);
             close(out_fd);
-            free(buffer);
             return -5;
         }
     }
 
-    if (rd_count < 0) {
-        perror("Error reading from source file");
-        close(in_fd);
-        close(out_fd);
-        free(buffer);
-        return -6;
-    }
-
     close(in_fd);
     close(out_fd);
-    free(buffer); // Ensure the buffer is freed at the end
 
-    return 0; // Return 0 on success
+    return (rd_count == 0) ? 0 : -6;
 }
