@@ -26,7 +26,6 @@ int list(const char* path, int recursive)
     DIR* dir = opendir(path);
 
     if (!dir) {
-        perror("Failed to open directory");
         return -1;
     }
 
@@ -40,7 +39,6 @@ int list(const char* path, int recursive)
         struct stat fileInfo;
 		
         if (lstat(fullPath, &fileInfo) != 0) {
-            perror("Failed to get file information");
             closedir(dir);
             return -1;
         }
@@ -60,7 +58,6 @@ int list(const char* path, int recursive)
             } 
 			
 			else {
-                perror("Failed to read symlink target");
                 closedir(dir);
                 return -1;
             }
