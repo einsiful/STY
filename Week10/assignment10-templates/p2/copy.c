@@ -51,78 +51,31 @@ int parseCopyArgs(int argc, char * const argv[], CopyArgs* args)
 }
 
 
-int doCopy(CopyArgs *args) {
-    if (args == NULL || args->from == NULL || args->to == NULL) {
-        return -1;
-    }
-
-    int fd_from = open(args->from, O_RDONLY);
-    if (fd_from == -1) {
-        perror("Error opening source file");
-        return -1;
-    }
-
-    struct stat source_stat;
-    if (fstat(fd_from, &source_stat) != 0) {
-        perror("Failed to get source file permissions");
-        close(fd_from);
-        return -1;
-    }
-
-    int fd_to = open(args->to, O_WRONLY | O_CREAT | O_EXCL, source_stat.st_mode & 0777);
-    if (fd_to == -1) {
-        perror("Error opening destination file");
-        close(fd_from);
-        return -1;
-    }
-
-    char *buffer = malloc(args->blocksize);
-    if (buffer == NULL) {
-        perror("Failed to allocate memory for buffer");
-        close(fd_from);
-        close(fd_to);
-        return -1;
-    }
-
-    ssize_t bytes_read;
-    while ((bytes_read = read(fd_from, buffer, args->blocksize)) > 0) {
-        int is_zero = 1;
-        for (ssize_t i = 0; i < bytes_read; ++i) {
-            if (buffer[i] != '\0') {
-                is_zero = 0;
-                break;
-            }
+int doCopy(CopyArgs* args)
+{
+        if (args == NULL) {
+                return -1;
         }
 
-        if (is_zero) {
-            if (lseek(fd_to, bytes_read, SEEK_CUR) == -1) {
-                perror("lseek error");
-                free(buffer);
-                close(fd_from);
-                close(fd_to);
-                return -1;
-            }
-        } else {
-            if (write(fd_to, buffer, bytes_read) != bytes_read) {
-                perror("Failed to write to destination file");
-                free(buffer);
-                close(fd_from);
-                close(fd_to);
-                return -1;
-            }
+#define BUF_SIZE 4096
+#define OUTPUT_MODE 0200
+        int in_fd, out_fd, rd_count, wt_count; char buffer[BUF_SIZE];
+
+        /* Open the input file and create the output file */
+        in_fd = open("from", O_RDONLY);                 /* open the source file */
+        if (in_fd < 0) exit(2);                                  /*if it cannot be opened, exit */
+        out_fd = creat("to",OUTPUT_MODE);               /* create the destination file */
+        if (out_fd < 0) exit(3);                                        /* if it cannot be created,> */
+        
+        while (1) {
+			rd_count = read(in_fd, buffer, BUF_SIZE);          /*read a block of data */
+                if (rd_count <= 0) break;                                          /* if end of fil>
+                wt_count = write(out_fd,buffer,rd_count);          /* write data */
+                if (wt_count <= 0) exit(4);                                      /* wt_count <= 0 i>
         }
-    }
-
-    if (bytes_read == -1) {
-        perror("Error reading from source file");
-        free(buffer);
-        close(fd_from);
-        close(fd_to);
-        return -1;
-    }
-
-    free(buffer);
-    close(fd_from);
-    close(fd_to);
-    return 0;
+        /* Close the files */
+        close(in_fd);  close(out_fd);
+        if (rd_count == 0) exit(0);                              /* no error on last read */
+        else exit(5);                                                      /* error on last read */
 }
+
