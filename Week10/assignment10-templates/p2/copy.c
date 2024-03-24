@@ -57,16 +57,23 @@ int doCopy(CopyArgs* args) {
     }
 #define BUF_SIZE 4096
 
-    int in_fd, out_fd, rd_count, wt_count;
     char buffer[BUF_SIZE];
-    struct stat stat_buf;
+
+#define OUTPUT_MODE 0700
+	struct stat stat_buf;
+	if (stat(args->from, &stat_buf) < 0) {
+		return -2;
+	}
+
+	int in_fd, out_fd, rd_count, wt_count;
+
 
     /* Open the source file */
     in_fd = open(args->from, O_RDONLY);
     if (in_fd < 0) exit(2);
 
     /* Create the destination file with source file's permissions */
-    out_fd = creat(args->to, stat_buf.st_mode);
+    out_fd = creat(args->to, OUTPUT_MODE);
     if (out_fd < 0) {exit(3);}
 
     while ((rd_count = read(in_fd, buffer, BUF_SIZE)) > 0) {
