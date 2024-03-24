@@ -71,7 +71,7 @@ int doCopy(CopyArgs* args)
 			rd_count = read(in_fd, buffer, BUF_SIZE);          /*read a block of data */
                 if (rd_count <= 0) break;                                          /* if end of fil>
                 wt_count = write(out_fd,buffer,rd_count);          /* write data */
-                if (wt_count <= 0) exit(4);                                      /* wt_count <= 0 i>
+                if (wt_count <= 0) exit(4);                                      
         }
         /* Close the files */
         close(in_fd);  close(out_fd);
