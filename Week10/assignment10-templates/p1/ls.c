@@ -1,7 +1,7 @@
 /* 
- * Group number (on canvas): xx
- * Student 1 name: xx
- * Student 2 name: xx
+ * Group number (on canvas): 2
+ * Student 1 name: Einar Árni Bjarnason
+ * Student 2 name: Hlynur Ísak Vilmundarson
  */
 
 #define _GNU_SOURCE
