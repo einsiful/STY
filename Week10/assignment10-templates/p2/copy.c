@@ -53,17 +53,15 @@ int parseCopyArgs(int argc, char * const argv[], CopyArgs* args)
 
 int doCopy(CopyArgs *args) {
     if (args == NULL || args->from == NULL || args->to == NULL) {
-        return -1; // Ensure args and necessary fields are not NULL.
+        return -1;
     }
 
-    // Open the source file for reading.
     int fd_from = open(args->from, O_RDONLY);
     if (fd_from == -1) {
         perror("Error opening source file");
         return -1;
     }
 
-    // Check if the destination file already exists.
     int fd_to = open(args->to, O_WRONLY | O_CREAT | O_EXCL, 0666);
     if (fd_to == -1) {
         perror("Error opening destination file");
@@ -81,7 +79,6 @@ int doCopy(CopyArgs *args) {
 
     ssize_t bytes_read;
     while ((bytes_read = read(fd_from, buffer, args->blocksize)) > 0) {
-        // Check if the buffer is filled with zeros
         int is_zero = 1;
         for (ssize_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] != '\0') {
@@ -91,10 +88,10 @@ int doCopy(CopyArgs *args) {
         }
 
         if (is_zero) {
-            // Skip over this block by seeking forward
-			off_t result = lseek(fd_to, bytes_read, SEEK_CUR);
-            if (result == (off_t) -1) {
-                perror("Failed to create a sparse block");
+            // Use lseek to create a sparse block.
+            off_t result = lseek(fd_to, bytes_read, SEEK_CUR);
+            if (result == (off_t)-1) {
+                perror("lseek error");
                 free(buffer);
                 close(fd_from);
                 close(fd_to);
