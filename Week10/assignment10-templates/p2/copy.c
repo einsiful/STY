@@ -57,34 +57,41 @@ int doCopy(CopyArgs* args) {
     }
 
 	#define BUF_SIZE 4096
+	#define OUTPUT 0200
 
-	int fd_from = open(args->from, O_RDONLY);
-	if (fd_from == -1) {
-		return -1;
+	int in_fd, out_fd, rd_count, wt_count;
+	char buffer[BUF_SIZE];
+
+	in_fd = open(args->from, O_RDONLY);
+	if (in_fd < 0) {
+		exit(2);
 	}
 
-	int fd_to = open(args->to, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (fd_to == -1) {
-		close(fd_from);
-		return -1;
+	out_fd = creat(args->to, OUTPUT);
+	if (out_fd < 0) {
+		exit(3);
 	}
 
-	char buf[BUF_SIZE];
-	ssize_t bytesRead;
-	while ((bytesRead = read(fd_from, buf, BUF_SIZE)) > 0) {
-		ssize_t bytesWritten = write(fd_to, buf, bytesRead);
-		if (bytesWritten != bytesRead) {
-			close(fd_from);
-			close(fd_to);
-			return -1;
+	while (1) {
+		rd_count = read(in_fd, buffer, BUF_SIZE);
+		if (rd_count <= 0) {
+			break;
+		}
+
+		wt_count = write(out_fd, buffer, rd_count);
+		if (wt_count <= 0) {
+			exit(4);
 		}
 	}
 
-	close(fd_from);
-	close(fd_to);
+	close(in_fd);
+	close(out_fd);
 
-	return 0;
-
-
+	if (rd_count == 0) {
+		exit(0);
+	}
+	else {
+		exit(5);
+	}
 
 }
