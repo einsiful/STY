@@ -55,8 +55,7 @@ int doCopy(CopyArgs* args) {
     if (args == NULL) {
         return -1;
     }
-
-#define BUF_SIZE 4096
+	#define BUF_SIZE 4096
 
     int in_fd, out_fd, rd_count, wt_count;
     char buffer[BUF_SIZE];
