@@ -81,12 +81,32 @@ int doCopy(CopyArgs *args) {
 
     ssize_t bytes_read;
     while ((bytes_read = read(fd_from, buffer, args->blocksize)) > 0) {
-        if (write(fd_to, buffer, bytes_read) != bytes_read) {
-            perror("Failed to write to destination file");
-            free(buffer);
-            close(fd_from);
-            close(fd_to);
-            return -1;
+        // Check if the buffer is filled with zeros
+        int is_zero = 1;
+        for (ssize_t i = 0; i < bytes_read; ++i) {
+            if (buffer[i] != '\0') {
+                is_zero = 0;
+                break;
+            }
+        }
+
+        if (is_zero) {
+            // Skip over this block by seeking forward
+            if (lseek(fd_to, bytes_read, SEEK_CUR) == -1) {
+                perror("Failed to create a sparse block");
+                free(buffer);
+                close(fd_from);
+                close(fd_to);
+                return -1;
+            }
+        } else {
+            if (write(fd_to, buffer, bytes_read) != bytes_read) {
+                perror("Failed to write to destination file");
+                free(buffer);
+                close(fd_from);
+                close(fd_to);
+                return -1;
+            }
         }
     }
 
