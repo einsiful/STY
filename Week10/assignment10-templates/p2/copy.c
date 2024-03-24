@@ -51,30 +51,67 @@ int parseCopyArgs(int argc, char * const argv[], CopyArgs* args)
 }
 
 
-int doCopy(CopyArgs* args)
-{
-	if (args == NULL) {
-		return -1;
-	}
+int doCopy(CopyArgs* args) {
+    if (args == NULL || args->from == NULL || args->to == NULL || args->blocksize <= 0) {
+        return -1; // Validate args and ensure blocksize is positive
+    }
 
-#define BUF_SIZE 4096
-#define OUTPUT_MODE 0200
-	int in_fd, out_fd, rd_count, wt_count; char buffer[BUF_SIZE];
+    int in_fd, out_fd, rd_count, wt_count;
+    // Allocate the buffer dynamically based on args->blocksize
+    char *buffer = (char *)malloc(args->blocksize);
+    if (buffer == NULL) {
+        perror("Failed to allocate memory for buffer");
+        return -1;
+    }
 
-	/* Open the input file and create the output file */
-	in_fd = open("from", O_RDONLY);			/* open the source file */
-	if (in_fd < 0) exit(2);					 /*if it cannot be opened, exit */
-	out_fd = creat("to",OUTPUT_MODE);		/* create the destination file */
-	if (out_fd < 0) exit(3);					/* if it cannot be created, exit */
-	
-	while (1) { /* Copy loop */
-		rd_count = read(in_fd, buffer, BUF_SIZE);	   /*read a block of data */
-		if (rd_count <= 0) break;					   /* if end of file or error, exit loop */
-		wt_count = write(out_fd,buffer,rd_count);	   /* write data */
-		if (wt_count <= 0) exit(4);					 /* wt_count <= 0 is an error */
-	}
-	/* Close the files */
-	close(in_fd);  close(out_fd);
-	if (rd_count == 0) exit(0);				 /* no error on last read */
-	else exit(5);							   /* error on last read */
+    // Open the source file
+    in_fd = open(args->from, O_RDONLY);
+    if (in_fd < 0) {
+        perror("Error opening source file");
+        free(buffer);
+        return -2;
+    }
+
+    struct stat stat_buf;
+    // Get the source file's permissions
+    if (fstat(in_fd, &stat_buf) != 0) {
+        perror("Failed to get source file permissions");
+        close(in_fd);
+        free(buffer);
+        return -3;
+    }
+
+    // Create the destination file with source file's permissions
+    out_fd = open(args->to, O_WRONLY | O_CREAT | O_EXCL, stat_buf.st_mode & 0777);
+    if (out_fd < 0) {
+        perror("Error opening destination file");
+        close(in_fd);
+        free(buffer);
+        return -4;
+    }
+
+    while ((rd_count = read(in_fd, buffer, args->blocksize)) > 0) {
+        wt_count = write(out_fd, buffer, rd_count);
+        if (wt_count <= 0) {
+            perror("Failed to write to destination file");
+            close(in_fd);
+            close(out_fd);
+            free(buffer);
+            return -5;
+        }
+    }
+
+    if (rd_count < 0) {
+        perror("Error reading from source file");
+        close(in_fd);
+        close(out_fd);
+        free(buffer);
+        return -6;
+    }
+
+    close(in_fd);
+    close(out_fd);
+    free(buffer); // Ensure the buffer is freed at the end
+
+    return 0; // Return 0 on success
 }
