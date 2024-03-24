@@ -66,7 +66,7 @@ int doCopy(CopyArgs* args) {
     if (in_fd < 0) exit(2);
 
     /* Create the destination file with source file's permissions */
-    out_fd = open(args->to, O_WRONLY | O_CREAT | O_EXCL, stat_buf.st_mode & 0777);
+    out_fd = creat(args->to, stat_buf.st_mode);
     if (out_fd < 0) {exit(3);}
 
     while ((rd_count = read(in_fd, buffer, BUF_SIZE)) > 0) {
