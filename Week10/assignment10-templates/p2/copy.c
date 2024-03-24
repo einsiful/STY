@@ -92,7 +92,8 @@ int doCopy(CopyArgs *args) {
 
         if (is_zero) {
             // Skip over this block by seeking forward
-            if (lseek(fd_to, bytes_read, SEEK_CUR) == -1) {
+			off_t result = lseek(fd_to, bytes_read, SEEK_CUR);
+            if (result == (off_t) -1) {
                 perror("Failed to create a sparse block");
                 free(buffer);
                 close(fd_from);
