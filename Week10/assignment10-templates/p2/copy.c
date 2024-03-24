@@ -63,12 +63,12 @@ int doCopy(CopyArgs* args) {
 
 	in_fd = open(args->from, O_RDONLY);
 	if (in_fd < 0) {
-		return 2;
+		exit(2);
 	}
 
 	out_fd = creat(args->to, 0200);
 	if (out_fd < 0) {
-		return 3;
+		exit(3);
 	}
 
 	while ((rd_count = read(in_fd, buffer, BUF_SIZE)) > 0) {
@@ -87,10 +87,10 @@ int doCopy(CopyArgs* args) {
 	close(out_fd);
 
 	if (rd_count == 0) {
-		return 0;
+		exit(0);
 	}
 	else {
-		return 5;
+		exit(5);
 	}
 
 }
