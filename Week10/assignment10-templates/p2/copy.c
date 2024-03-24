@@ -57,7 +57,6 @@ int doCopy(CopyArgs* args) {
     }
 
 	#define BUF_SIZE 4096
-	#define OUTPUT 0200
 
 	int in_fd, out_fd, rd_count, wt_count;
 	char buffer[BUF_SIZE];
@@ -67,7 +66,7 @@ int doCopy(CopyArgs* args) {
 		exit(2);
 	}
 
-	out_fd = creat(args->to, OUTPUT);
+	out_fd = creat(args->to, 0200);
 	if (out_fd < 0) {
 		exit(3);
 	}
