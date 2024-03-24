@@ -1,7 +1,7 @@
 /* 
- * Group number (on canvas): xx
- * Student 1 name: xx 
- * Student 2 name: xx 
+ * Group number (on canvas): 2
+ * Student 1 name: Einar Árni Bjarnason
+ * Student 2 name: Hlynur Ísak Vilmundarson
  */
 
 #define _POSIX_C_SOURCE 2
@@ -51,15 +51,55 @@ int parseCopyArgs(int argc, char * const argv[], CopyArgs* args)
 }
 
 
-int doCopy(CopyArgs* args)
-{
-	if (args == NULL) {
-		return -1;
-	}
+int doCopy(CopyArgs *args) {
+    if (args == NULL || args->from == NULL || args->to == NULL) {
+        return -1; // Ensure args and necessary fields are not NULL.
+    }
 
-	// ----------------
-	// Copy the file.
-	// ----------------
+    // Open the source file for reading.
+    int fd_from = open(args->from, O_RDONLY);
+    if (fd_from == -1) {
+        perror("Error opening source file");
+        return -1;
+    }
 
-	return -1;
+    // Check if the destination file already exists.
+    int fd_to = open(args->to, O_WRONLY | O_CREAT | O_EXCL, 0666);
+    if (fd_to == -1) {
+        perror("Error opening destination file");
+        close(fd_from);
+        return -1;
+    }
+
+    char *buffer = malloc(args->blocksize);
+    if (buffer == NULL) {
+        perror("Failed to allocate memory for buffer");
+        close(fd_from);
+        close(fd_to);
+        return -1;
+    }
+
+    ssize_t bytes_read;
+    while ((bytes_read = read(fd_from, buffer, args->blocksize)) > 0) {
+        if (write(fd_to, buffer, bytes_read) != bytes_read) {
+            perror("Failed to write to destination file");
+            free(buffer);
+            close(fd_from);
+            close(fd_to);
+            return -1;
+        }
+    }
+
+    if (bytes_read == -1) {
+        perror("Error reading from source file");
+        free(buffer);
+        close(fd_from);
+        close(fd_to);
+        return -1;
+    }
+
+    free(buffer);
+    close(fd_from);
+    close(fd_to);
+    return 0;
 }
