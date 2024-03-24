@@ -69,5 +69,6 @@ int list(const char* path, int recursive)
     }
 
     closedir(opened_directory);
+	free(new_file);
     return 0;
 }
