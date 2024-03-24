@@ -55,7 +55,7 @@ int doCopy(CopyArgs* args) {
     if (args == NULL) {
         return -1;
     }
-	#define BUF_SIZE 4096
+#define BUF_SIZE 4096
 
     int in_fd, out_fd, rd_count, wt_count;
     char buffer[BUF_SIZE];
@@ -63,20 +63,11 @@ int doCopy(CopyArgs* args) {
 
     /* Open the source file */
     in_fd = open(args->from, O_RDONLY);
-    if (in_fd < 0) return -2;
-
-    /* Get the source file's permissions */
-    if (fstat(in_fd, &stat_buf) != 0) {
-        close(in_fd);
-        return -3;
-    }
+    if (in_fd < 0) exit(2);
 
     /* Create the destination file with source file's permissions */
     out_fd = open(args->to, O_WRONLY | O_CREAT | O_EXCL, stat_buf.st_mode & 0777);
-    if (out_fd < 0) {
-        close(in_fd);
-        return -4;
-    }
+    if (out_fd < 0) {exit(3);}
 
     while ((rd_count = read(in_fd, buffer, BUF_SIZE)) > 0) {
         wt_count = write(out_fd, buffer, rd_count);
