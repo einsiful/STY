@@ -50,12 +50,6 @@ int parseCopyArgs(int argc, char * const argv[], CopyArgs* args)
 	return 0;
 }
 
-typedef struct {
-    char *from;     // Source file path
-    char *to;       // Destination file path
-    int blocksize;  // Block size for copying
-} CopyArgs;
-
 
 int doCopy(CopyArgs* args) {
     if (args == NULL) {
