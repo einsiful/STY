@@ -6,10 +6,10 @@
 
 #define _GNU_SOURCE
 #include <dirent.h>
+#include <limits.h> // For PATH_MAX
 
 #include "ls.h"
 
-// You may not need all these headers ...
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -19,79 +19,55 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+// Assuming _printLine is defined somewhere and has a prototype like this:
+// void _printLine(size_t size, const char* full_path_and_name, const char* type_str);
+
 int list(const char* path, int recursive)
 {
-	(void) recursive;
-	DIR *opened_directory;
-	int error;
-	opened_directory = opendir(path);
-	if (opened_directory == NULL)
-	{
-		return -1;
-	}
+    (void) recursive; // Ignored in the current implementation
+    DIR* opened_directory = opendir(path);
+    if (!opened_directory) {
+        perror("Failed to open directory");
+        return -1;
+    }
 
-	struct dirent *new_file;
-	struct stat new_file_statistics;
-	size_t size;
-	char* full_path_and_name = malloc(sizeof(char) * (MAX_FILE_NAME_LENGTH + strlen(path)));
-	char type_str[MAX_FILE_NAME_LENGTH];
-	char new_path[MAX_FILE_NAME_LENGTH]; // Just gonna assume the path aint that big :)
+    struct dirent* new_file;
+    while ((new_file = readdir(opened_directory)) != NULL) {
+        if (new_file->d_name[0] == '.') continue; // Skip hidden files
 
-	new_file = readdir(opened_directory);
-	while (new_file != NULL)
-	{
-		if (new_file->d_name[0] == '.')
-		{
-			new_file = readdir(opened_directory);
-			continue;
-		}
+        char full_path_and_name[PATH_MAX];
+        snprintf(full_path_and_name, PATH_MAX, "%s/%s", path, new_file->d_name);
 
-		strcpy(full_path_and_name, path);
-		strcat(full_path_and_name, "/");
-		strcat(full_path_and_name, new_file->d_name);
+        struct stat new_file_statistics;
+        if (fstatat(dirfd(opened_directory), new_file->d_name, &new_file_statistics, AT_SYMLINK_NOFOLLOW) != 0) {
+            perror("Failed to get file statistics");
+            closedir(opened_directory);
+            return -1;
+        }
 
-		strcpy(new_path, path);
-		strcpy(new_path, "/");
+        char type_str[PATH_MAX] = ""; // Initialize to empty string
+        if (new_file->d_type == DT_FIFO) {
+            strcpy(type_str, "|");
+        } else if (new_file->d_type == DT_DIR) {
+            strcpy(type_str, "/");
+        } else if (new_file->d_type == DT_LNK) {
+            ssize_t link_size = readlink(full_path_and_name, type_str, sizeof(type_str) - 4); // Leave space for " -> "
+            if (link_size >= 0) {
+                type_str[link_size] = '\0'; // Null-terminate the result
+                memmove(type_str + 4, type_str, strlen(type_str) + 1); // Shift to make space for " -> "
+                memcpy(type_str, " -> ", 4); // Prepend " -> "
+            } else {
+                perror("Failed to read symlink");
+                closedir(opened_directory);
+                return -1;
+            }
+        } else if (new_file_statistics.st_mode & S_IXUSR) {
+            strcpy(type_str, "*");
+        }
 
-		error = fstatat(dirfd(opened_directory), full_path_and_name, &new_file_statistics, AT_SYMLINK_NOFOLLOW);
-		if (error != 0)
-		{
-			free(full_path_and_name);
-			return -1;
-		}
-		size = new_file_statistics.st_size;
-		
-		if (new_file->d_type == DT_FIFO)
-		{
-			strcpy(type_str, "|");
-		}
-		else if (new_file->d_type == DT_DIR)
-		{
-			strcpy(type_str, "/");
-		}
-		else if (new_file->d_type == DT_LNK)
-		{
-			strcpy(type_str, " -> ");
-			char* temp_str = malloc(sizeof(char) * (MAX_FILE_NAME_LENGTH));
-			error = readlink(full_path_and_name, temp_str, sizeof(temp_str));
-			if (error != -1)
-			{
-				free(full_path_and_name);
-				return -1;
-			}
-			strcat(type_str, temp_str);
-			temp_str[error] = '\0';
-		}
-		else if (new_file_statistics.st_mode & 0111) // If its an executable for any permission
-		{
-			strcpy(type_str, "*");
-		}
-		
-		_printLine(size, full_path_and_name, type_str);
-		new_file = readdir(opened_directory);
-	}
+        _printLine(new_file_statistics.st_size, full_path_and_name, type_str);
+    }
 
-	error = closedir(opened_directory);
-	free(full_path_and_name);
-	return error;
+    closedir(opened_directory);
+    return 0;
 }
