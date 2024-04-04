@@ -104,29 +104,28 @@ static int _hasMoreBytes(OpenFileHandle *handle)
 
 int _findDirectoryEntry(OpenFileHandle *dir, char *name, DirectoryEntry *dirEntry)
 {
-	// Assuming DirectoryEntry is properly packed and does not require specific alignment.
-    DirectoryEntry tempEntry;
+	 if (dir == NULL || name == NULL || dirEntry == NULL) {
+        return -1;
+    }
 
-    // Set the directory file handle to the start of the directory.
+    // The size of each directory entry on disk.
+    size_t entrySize = sizeof(DirectoryEntry);
+    char buffer[entrySize];
+    int bytesRead;
+
+    // Reset the directory read position.
     dir->currentFileOffset = 0;
-    dir->currentBlock = dir->fileSystem->header->rootDirectoryBlock;
+    dir->currentBlock = ROOT_DIRECTORY_BLOCK;
 
-    while (_hasMoreBytes(dir)) {
-        // Read the next directory entry.
-        if (readFile(dir, (char*)&tempEntry, sizeof(DirectoryEntry)) != sizeof(DirectoryEntry)) {
-            return -1; // Error reading directory entry.
-        }
+    while ((bytesRead = readFile(dir, buffer, entrySize)) == entrySize) {
+        memcpy(dirEntry, buffer, entrySize);
 
-        // Check if this is the entry we are looking for.
-        if (tempEntry.fileType != 255 && strncmp(tempEntry.filename, name, FILENAME_SIZE) == 0) {
-            // Found the entry, copy it to dirEntry.
-            memcpy(dirEntry, &tempEntry, sizeof(DirectoryEntry));
+        if (dirEntry->type != FTYPE_DELETED && strncmp(dirEntry->name, name, FILE_NAME_LENGTH) == 0) {
             return 0;
         }
     }
 
-    // Reached the end of the directory without finding the entry.
-    return -1;
+    return bytesRead < 0 ? -1 : 1;
 }
 
 OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
@@ -135,26 +134,22 @@ OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
         return NULL;
     }
 
-    // Open the root directory file handle.
-    OpenFileHandle *root = _openFileAtBlock(fs, 0, fs->header->rootDirectorySize);
-    if (root == NULL) {
+    // Find the directory entry for the file.
+    DirectoryEntry entry;
+    OpenFileHandle *rootDirHandle = _openFileAtBlock(fs, ROOT_DIRECTORY_BLOCK, fs->header->rootDirectorySize);
+    if (rootDirHandle == NULL) {
         return NULL;
     }
 
-    // Try to find the file in the root directory.
-    DirectoryEntry entry;
-    if (_findDirectoryEntry(root, name, &entry) == 0) {
-        if (entry.fileType == FTYPE_REGULAR) {
-            // Close the root directory handle before opening the file.
-            closeFile(root);
-            // Found the file; open and return a new file handle.
-            return _openFileAtBlock(fs, entry.firstBlock, entry.fileSize);
-        }
+    int found = _findDirectoryEntry(rootDirHandle, name, &entry);
+    closeFile(rootDirHandle);  // Close root directory handle as we don't need it anymore.
+
+    if (found != 0 || entry.type != FTYPE_REGULAR) {
+        return NULL;
     }
 
-    // Did not find the file or the entry is not a regular file.
-    closeFile(root);
-    return NULL;
+    // Create a new file handle for the file.
+    return _openFileAtBlock(fs, entry.firstBlock, entry.length);
 }
 
 void closeFile(OpenFileHandle *handle)
@@ -172,26 +167,21 @@ void closeFile(OpenFileHandle *handle)
 char _readFileByte(OpenFileHandle *handle)
 {
 	if (!_hasMoreBytes(handle)) {
-        // Handle the error as appropriate in your assignment, perhaps set errno.
+        // No more bytes to read.
         return -1;
     }
 
-    // Calculate the offset within the current block.
-    uint32_t blockOffset = handle->currentFileOffset % BLOCK_SIZE;
-    
-    // If we are at the beginning of a block, we might need to update currentBlock.
-    if (blockOffset == 0 && handle->currentFileOffset > 0) {
-        // Find the next block in the chain from the FAT.
-        handle->currentBlock = handle->fileSystem->fat[handle->currentBlock];
+    char byte;
+    int blockOffset = handle->currentFileOffset % BLOCK_SIZE;
+    int blockNumber = handle->currentFileOffset / BLOCK_SIZE;
+
+    // If we're at the start of a new block, find the correct block number using the FAT.
+    if (blockOffset == 0 && handle->currentFileOffset != 0) {
+        blockNumber = handle->fileSystem->header->fat[blockNumber - 1];
     }
 
-    // Read the byte from the block.
-    char byte;
-    int blockStartAddress = handle->currentBlock * BLOCK_SIZE;
-    lseek(handle->fileSystem->fd, blockStartAddress + blockOffset, SEEK_SET);
+    lseek(handle->fileSystem->fd, HEADER_SIZE + (blockNumber * BLOCK_SIZE) + blockOffset, SEEK_SET);
     read(handle->fileSystem->fd, &byte, 1);
-
-    // Update the file offset.
     handle->currentFileOffset++;
 
     return byte;
