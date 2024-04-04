@@ -74,8 +74,7 @@ FileSystem *initFileSystem(char *diskFile) {
 // Create a file handle representing a file that is part of a specific file system (fs),
 // starting at block (blockIndex) in that file system, and a file length (length) in bytes
 // You can make use of this function in your code....
-static OpenFileHandle *_openFileAtBlock(FileSystem *fs, uint32_t blockIndex,
-	uint32_t length)
+static OpenFileHandle *_openFileAtBlock(FileSystem *fs, uint32_t blockIndex, uint32_t length)
 {
 	assert(fs != NULL);
 	assert(blockIndex < fs->header->fsBlocks);
@@ -130,6 +129,8 @@ int _findDirectoryEntry(OpenFileHandle *dir, char *name, DirectoryEntry *dirEntr
 
 OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
 {
+	(void)dir;
+
 	if (fs == NULL || name == NULL) {
         return NULL;
     }
