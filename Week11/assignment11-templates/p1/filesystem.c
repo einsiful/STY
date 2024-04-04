@@ -16,24 +16,58 @@
 #include <string.h>
 
 FileSystem *initFileSystem(char *diskFile) {
-    if (diskFile == NULL) {
-        return NULL;
-    }
-
     int fd = open(diskFile, O_RDONLY);
-    if (fd == -1) {
-        perror("Error opening disk image");
+    if (fd < 0) {
+        perror("Failed to open disk image");
         return NULL;
     }
 
-    FileSystem *fs = readHeaderAndFAT(fd);
-    close(fd);
-
-    if (fs == NULL) {
-        // Error handling is done within the readHeaderAndFAT function
+    // Read the header of the file system, without the FAT
+    FileSystemHeader header;
+    if (read(fd, &header, sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize)) 
+        != sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize)) {
+        perror("Failed to read header");
+        close(fd);
         return NULL;
     }
 
+    // Calculate the size of the FAT
+    size_t fatSize = header.fsBlocks * sizeof(block_t);
+
+    // Allocate memory for the FileSystem structure
+    FileSystem *fs = malloc(sizeof(FileSystem));
+    if (!fs) {
+        perror("Failed to allocate memory for FileSystem");
+        close(fd);
+        return NULL;
+    }
+
+    // Allocate memory for the FileSystemHeader structure (including FAT)
+    fs->header = malloc(HEADER_SIZE + fatSize);
+    if (!fs->header) {
+        perror("Failed to allocate memory for FileSystemHeader");
+        free(fs);
+        close(fd);
+        return NULL;
+    }
+
+    // Copy the previously read header into the newly allocated space
+    memcpy(fs->header, &header, sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize));
+
+    // Read the FAT into memory after the FileSystemHeader
+    if (read(fd, fs->header->fat, fatSize) != fatSize) {
+        perror("Failed to read FAT");
+        free(fs->header);
+        free(fs);
+        close(fd);
+        return NULL;
+    }
+
+    // Store the file descriptor and calculate the header size
+    fs->fd = fd;
+    fs->headerSize = HEADER_SIZE + fatSize;
+
+    // Return the FileSystem structure
     return fs;
 }
 
