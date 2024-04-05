@@ -174,12 +174,44 @@ void closeFile(OpenFileHandle *handle)
 	free(handle);
 }
 
-char _readFileByte(OpenFileHandle *handle)
-{
-	(void)handle;
+char _readFileByte(OpenFileHandle *handle) {
+    // Ensure there are more bytes to read
+    if (!_hasMoreBytes(handle)) {
+        return -1; // or some other error handling
+    }
 
-    return 0;
+    int offsetWithinBlock = handle->currentFileOffset % BLOCK_SIZE;
+    int blockIndex = handle->currentBlock;
 
+    // If at the start of a new block, find the correct block using the FAT
+    if (offsetWithinBlock == 0 && handle->currentFileOffset != 0) {
+        blockIndex = handle->fileSystem->header->fat[handle->currentBlock];
+        if (blockIndex == INVALID_BLOCK_INDEX) {
+            // End of the file or error in the FAT
+            return -1; // Handle as appropriate
+        }
+        handle->currentBlock = blockIndex;
+    }
+
+    // Calculate the byte's position within the file system
+    off_t position = HEADER_SIZE + (blockIndex * BLOCK_SIZE) + offsetWithinBlock;
+    char byte;
+
+    // Seek to the position and read one byte
+    if (lseek(handle->fileSystem->fd, position, SEEK_SET) < 0) {
+        perror("lseek error");
+        return -1; // Error handling
+    }
+
+    if (read(handle->fileSystem->fd, &byte, 1) != 1) {
+        perror("read error");
+        return -1; // Error handling
+    }
+
+    // Update the file offset for the next read
+    handle->currentFileOffset++;
+
+    return byte;
 }
 
 int readFile(OpenFileHandle *handle, char *buffer, int length)
