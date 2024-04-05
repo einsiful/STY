@@ -151,15 +151,24 @@ OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
         return NULL;
     }
 
-    int found = _findDirectoryEntry(rootDirHandle, name, &entry);
-    closeFile(rootDirHandle);  // Close root directory handle as we don't need it anymore.
+    // ----------------
+    // If dir is not NULL:
+    // find the directory (in the root directory) with that name
+    // open that directory, and use that instead of root for searching the file name
+    // ----------------
+    (void)dir;
 
-    if (found != 0 || entry.type != FTYPE_REGULAR) {
-        return NULL;
-    }
+    // ----------------
+    // Find the directory entry with that name.
+    // You can use readFile to read from the directory stream.
+    // ----------------
 
-    // Create a new file handle for the file.
-    return _openFileAtBlock(fs, entry.firstBlock, entry.length);
+    closeFile(rootDirHandle);
+
+    // ----------------
+    // Return a file handle if the file could be found.
+    // ----------------
+    return NULL;
 }
 
 void closeFile(OpenFileHandle *handle)
