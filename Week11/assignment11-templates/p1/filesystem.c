@@ -55,13 +55,14 @@ FileSystem *initFileSystem(char *diskFile) {
     memcpy(fs->header, &header, sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize));
 
     // Read the FAT into memory after the FileSystemHeader
-    if (read(fd, fs->header->fat, fatSize) != fatSize) {
-        perror("Failed to read FAT");
-        free(fs->header);
-        free(fs);
-        close(fd);
-        return NULL;
-    }
+    ssize_t bytesRead = read(fd, fs->header->fat, fatSize);
+	if (bytesRead == -1 || (size_t)bytesRead != fatSize) {
+		perror("Failed to read FAT");
+		free(fs->header);
+		free(fs);
+		close(fd);
+		return NULL;
+	}
 
     // Store the file descriptor and calculate the header size
     fs->fd = fd;
@@ -116,15 +117,25 @@ int _findDirectoryEntry(OpenFileHandle *dir, char *name, DirectoryEntry *dirEntr
     dir->currentFileOffset = 0;
     dir->currentBlock = ROOT_DIRECTORY_BLOCK;
 
-    while ((bytesRead = readFile(dir, buffer, entrySize)) == entrySize) {
-        memcpy(dirEntry, buffer, entrySize);
+   ssize_t bytesRead;
+	while (1) {
+		bytesRead = readFile(dir, buffer, entrySize);
+		if (bytesRead < 0) {
+			// Handle read error
+			return -1; // Or another appropriate error handling
+		}
+		if ((size_t)bytesRead != entrySize) {
+			// End of directory or not enough data, break from the loop
+			break;
+		}
 
-        if (dirEntry->type != FTYPE_DELETED && strncmp(dirEntry->name, name, FILE_NAME_LENGTH) == 0) {
-            return 0;
-        }
-    }
-
-    return bytesRead < 0 ? -1 : 1;
+		// Process the directory entry
+		memcpy(dirEntry, buffer, entrySize);
+		if (dirEntry->type != FTYPE_DELETED && strncmp(dirEntry->name, name, FILE_NAME_LENGTH) == 0) {
+			return 0; // Entry found
+		}
+	}
+	return -1; // Entry not found
 }
 
 OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
