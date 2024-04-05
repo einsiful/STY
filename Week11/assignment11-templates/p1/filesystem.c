@@ -181,9 +181,8 @@ char _readFileByte(OpenFileHandle *handle) {
     }
 
     int offsetWithinBlock = handle->currentFileOffset % BLOCK_SIZE;
-    int blockIndex = handle->currentBlock;
-
     uint32_t blockIndex = handle->currentBlock;
+    
     if (blockIndex == INVALID_BLOCK_INDEX) {
         return -1; // Handle as appropriate
     }
