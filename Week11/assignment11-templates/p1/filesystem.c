@@ -15,187 +15,138 @@
 #include <assert.h>
 #include <string.h>
 
-FileSystem *initFileSystem(char *diskFile) {
-    int fd = open(diskFile, O_RDONLY);
-    if (fd < 0) {
-        perror("Failed to open disk image");
+FileSystem *initFileSystem(char *diskFile)
+{
+    if (diskFile == NULL) {
         return NULL;
     }
 
-    // Read the header of the file system, without the FAT
-    FileSystemHeader header;
-    if (read(fd, &header, sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize)) 
-        != sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize)) {
-        perror("Failed to read header");
-        close(fd);
-        return NULL;
-    }
+    // ----------------
+    // open file system image and read header (FAT + root dir size) into a FileSystemHeader data structure
+    // (memory allocated dynamically with malloc)
+    // You may assume that the file system is never re-allocated from memory.
+    // ----------------
 
-    // Calculate the size of the FAT
-    size_t fatSize = header.fsBlocks * sizeof(block_t);
-
-    // Allocate memory for the FileSystem structure
-    FileSystem *fs = malloc(sizeof(FileSystem));
-    if (!fs) {
-        perror("Failed to allocate memory for FileSystem");
-        close(fd);
-        return NULL;
-    }
-
-    // Allocate memory for the FileSystemHeader structure (including FAT)
-    fs->header = malloc(HEADER_SIZE + fatSize);
-    if (!fs->header) {
-        perror("Failed to allocate memory for FileSystemHeader");
-        free(fs);
-        close(fd);
-        return NULL;
-    }
-
-    // Copy the previously read header into the newly allocated space
-    memcpy(fs->header, &header, sizeof(header.magic) + sizeof(header.fsBlocks) + sizeof(header.rootDirectorySize));
-
-    // Read the FAT into memory after the FileSystemHeader
-    ssize_t bytesRead = read(fd, fs->header->fat, fatSize);
-	if (bytesRead == -1 || (size_t)bytesRead != fatSize) {
-		perror("Failed to read FAT");
-		free(fs->header);
-		free(fs);
-		close(fd);
-		return NULL;
-	}
-
-    // Store the file descriptor and calculate the header size
-    fs->fd = fd;
-    fs->headerSize = HEADER_SIZE + fatSize;
-
-    // Return the FileSystem structure
-    return fs;
+    return NULL;
 }
 
 // Create a file handle representing a file that is part of a specific file system (fs),
 // starting at block (blockIndex) in that file system, and a file length (length) in bytes
-// You can make use of this function in your code....
-static OpenFileHandle *_openFileAtBlock(FileSystem *fs, uint32_t blockIndex, uint32_t length)
+static OpenFileHandle *_openFileAtBlock(FileSystem *fs, uint32_t blockIndex,
+    uint32_t length)
 {
-	assert(fs != NULL);
-	assert(blockIndex < fs->header->fsBlocks);
+    assert(fs != NULL);
+    assert(blockIndex < BLOCK_SIZE);
 
-	OpenFileHandle *handle = malloc(sizeof(OpenFileHandle));
-	if (handle == NULL) {
-		return NULL;
-	}
+    OpenFileHandle *handle = malloc(sizeof(OpenFileHandle));
+    if (handle == NULL) {
+        return NULL;
+    }
 
-	handle->fileSystem		= fs;
-	handle->currentBlock	  = blockIndex;
-	handle->currentFileOffset = 0;
-	handle->length			= length;
+    handle->fileSystem        = fs;
+    handle->currentBlock      = blockIndex;
+    handle->currentFileOffset = 0;
+    handle->length            = length;
 
-	return handle;
+    return handle;
 }
 
 static int _hasMoreBytes(OpenFileHandle *handle)
 {
-	return (handle->currentFileOffset < handle->length);
+    assert(handle != NULL);
+    assert(handle->currentFileOffset <= handle->length);
 
+    (void)handle;
+
+    // ----------------
+    // Check if there are more bytes to read in the file.
+    // ----------------
+
+    return 0;
 }
-
-#define INVALID_BLOCK_INDEX (uint32_t)-1
-
 
 int _findDirectoryEntry(OpenFileHandle *dir, char *name, DirectoryEntry *dirEntry)
 {
-    if (dir == NULL || name == NULL || dirEntry == NULL) {
-        return -1;
-    }
+    (void)dir;
+    (void)name;
+    (void)dirEntry;
 
-    // The size of each directory entry on disk.
-    size_t entrySize = sizeof(DirectoryEntry);
-    char buffer[entrySize];
-    ssize_t bytesRead;  // Declare bytesRead here as ssize_t
-
-    // Reset the directory read position.
-    dir->currentFileOffset = 0;
-    dir->currentBlock = ROOT_DIRECTORY_BLOCK;
-
-    while (1) {
-        bytesRead = readFile(dir, buffer, entrySize);
-        if (bytesRead < 0) {
-            // Handle read error
-            return -1;
-        }
-        if ((size_t)bytesRead != entrySize) {
-            // End of directory or not enough data, break from the loop
-            break;
-        }
-
-        memcpy(dirEntry, buffer, entrySize);
-        if (dirEntry->type != FTYPE_DELETED && strncmp(dirEntry->name, name, FILE_NAME_LENGTH) == 0) {
-            return 0; // Entry found
-        }
-    }
-    return -1; // Entry not found or end of directory reached without finding the entry
+    return -1;
 }
+
 
 OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
 {
-	(void)dir;
-
-	if (fs == NULL || name == NULL) {
+    if ((fs == NULL) || (name == NULL)) {
         return NULL;
     }
 
-    // Find the directory entry for the file.
-    DirectoryEntry entry;
-    OpenFileHandle *rootDirHandle = _openFileAtBlock(fs, ROOT_DIRECTORY_BLOCK, fs->header->rootDirectorySize);
-    if (rootDirHandle == NULL) {
+    // Open the root directory file.
+    OpenFileHandle *root = _openFileAtBlock(fs, ROOT_DIRECTORY_BLOCK, fs->header->rootDirectorySize);
+    if (root == NULL) {
         return NULL;
     }
 
-    int found = _findDirectoryEntry(rootDirHandle, name, &entry);
-    closeFile(rootDirHandle);  // Close root directory handle as we don't need it anymore.
+    // ----------------
+    // If dir is not NULL:
+    // find the directory (in the root directory) with that name
+    // open that directory, and use that instead of root for searching the file name
+    // ----------------
+    (void)dir;
 
-    if (found != 0 || entry.type != FTYPE_REGULAR) {
-        return NULL;
-    }
+    // ----------------
+    // Find the directory entry with that name.
+    // You can use readFile to read from the directory stream.
+    // ----------------
 
-    // Create a new file handle for the file.
-    return _openFileAtBlock(fs, entry.firstBlock, entry.length);
+    closeFile(root);
+
+    // ----------------
+    // Return a file handle if the file could be found.
+    // ----------------
+    return NULL;
 }
 
 void closeFile(OpenFileHandle *handle)
 {
-	if (handle == NULL) {
-		return;
-	}
+    if (handle == NULL) {
+        return;
+    }
 
-	// Since we opened the file system with read access only, we do not have
-	// any pending modifications that might need to be written back to the file
-	// prior closing. Hence, we can just free the handle and call it a day.
-	free(handle);
+    // Since we opened the file system with read access only, we do not have
+    // any pending modifications that might need to be written back to the file
+    // prior closing. Hence, we can just free the handle and call it a day.
+    free(handle);
 }
 
-char _readFileByte(OpenFileHandle *handle) {
+static char _readFileByte(OpenFileHandle *handle)
+{
     assert(handle != NULL);
     assert(_hasMoreBytes(handle));
     assert(handle->fileSystem != NULL);
-    assert(handle->currentBlock < handle->fileSystem->header->fsBlocks);
+    assert(handle->currentBlock < BLOCK_SIZE);
+
+    // ----------------
+    // Read a byte from the file. This should never fail, because the function
+    // must not be called if there are not more bytes to read.
+    // ----------------
 
     return 0;
-
 }
 
+// This acts like the default linux read() system call on your file.
 int readFile(OpenFileHandle *handle, char *buffer, int length)
 {
-	if ((handle == NULL) || (buffer == NULL)) {
-		return -1;
-	}
+    if ((handle == NULL) || (buffer == NULL)) {
+        return -1;
+    }
 
-	int n = 0;
-	while ((n < length) && _hasMoreBytes(handle)) {
-		buffer[n] = _readFileByte(handle);
+    int n = 0;
+    while ((n < length) && _hasMoreBytes(handle)) {
+        buffer[n] = _readFileByte(handle);
 
-		++n;
-	}
+        ++n;
+    }
 
-	return n;
+    return n;
 }
