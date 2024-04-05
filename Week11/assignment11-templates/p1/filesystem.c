@@ -185,15 +185,21 @@ char _readFileByte(OpenFileHandle *handle)
     int blockOffset = handle->currentFileOffset % BLOCK_SIZE;
     int blockNumber = handle->currentFileOffset / BLOCK_SIZE;
 
-    // If we're at the start of a new block, find the correct block number using the FAT.
-    if (blockOffset == 0 && handle->currentFileOffset != 0) {
-        blockNumber = handle->fileSystem->header->fat[blockNumber - 1];
+    if(blockOffset == 0 && handle->currentFileOffset != 0) {
+        // Move to the next block
+        handle->currentBlock = handle->fileSystem->header->fat[handle->currentBlock];
     }
 
-    lseek(handle->fileSystem->fd, HEADER_SIZE + (blockNumber * BLOCK_SIZE) + blockOffset, SEEK_SET);
-    read(handle->fileSystem->fd, &byte, 1);
-    handle->currentFileOffset++;
+    off_t position = handle->fileSystem->headerSize + handle->currentBlock * BLOCK_SIZE + blockOffset;
+    if (lseek(handle->fileSystem->fd, position, SEEK_SET) == (off_t)-1) {
+        return -1;
+    }
 
+    if (read(handle->fileSystem->fd, &byte, 1) != 1) {
+        return -1;
+    }
+
+    handle->currentFileOffset++;
     return byte;
 }
 
