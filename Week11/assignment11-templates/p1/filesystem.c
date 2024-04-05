@@ -145,7 +145,6 @@ OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
     }
 
     // Find the directory entry for the file.
-    DirectoryEntry entry;
     OpenFileHandle *rootDirHandle = _openFileAtBlock(fs, ROOT_DIRECTORY_BLOCK, fs->header->rootDirectorySize);
     if (rootDirHandle == NULL) {
         return NULL;
