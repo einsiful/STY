@@ -104,38 +104,36 @@ static int _hasMoreBytes(OpenFileHandle *handle)
 
 int _findDirectoryEntry(OpenFileHandle *dir, char *name, DirectoryEntry *dirEntry)
 {
-	 if (dir == NULL || name == NULL || dirEntry == NULL) {
+    if (dir == NULL || name == NULL || dirEntry == NULL) {
         return -1;
     }
 
     // The size of each directory entry on disk.
     size_t entrySize = sizeof(DirectoryEntry);
     char buffer[entrySize];
-    int bytesRead;
+    ssize_t bytesRead;  // Declare bytesRead here as ssize_t
 
     // Reset the directory read position.
     dir->currentFileOffset = 0;
     dir->currentBlock = ROOT_DIRECTORY_BLOCK;
 
-   ssize_t bytesRead;
-	while (1) {
-		bytesRead = readFile(dir, buffer, entrySize);
-		if (bytesRead < 0) {
-			// Handle read error
-			return -1; // Or another appropriate error handling
-		}
-		if ((size_t)bytesRead != entrySize) {
-			// End of directory or not enough data, break from the loop
-			break;
-		}
+    while (1) {
+        bytesRead = readFile(dir, buffer, entrySize);
+        if (bytesRead < 0) {
+            // Handle read error
+            return -1;
+        }
+        if ((size_t)bytesRead != entrySize) {
+            // End of directory or not enough data, break from the loop
+            break;
+        }
 
-		// Process the directory entry
-		memcpy(dirEntry, buffer, entrySize);
-		if (dirEntry->type != FTYPE_DELETED && strncmp(dirEntry->name, name, FILE_NAME_LENGTH) == 0) {
-			return 0; // Entry found
-		}
-	}
-	return -1; // Entry not found
+        memcpy(dirEntry, buffer, entrySize);
+        if (dirEntry->type != FTYPE_DELETED && strncmp(dirEntry->name, name, FILE_NAME_LENGTH) == 0) {
+            return 0; // Entry found
+        }
+    }
+    return -1; // Entry not found or end of directory reached without finding the entry
 }
 
 OpenFileHandle *openFile(FileSystem *fs, char *dir, char *name)
