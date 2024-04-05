@@ -187,7 +187,7 @@ char _readFileByte(OpenFileHandle *handle)
 
     if (blockOffset == 0) {
         // Read the next block from the file system.
-        ssize_t bytesRead = pread(handle->fileSystem->fd, handle->fileSystem->header->fat, BLOCK_SIZE, handle->currentBlock * BLOCK_SIZE);
+        ssize_t bytesRead = handle->fileSystem->header->fsBlocks;
         if (bytesRead != BLOCK_SIZE) {
             // Handle read error
             return -1;
