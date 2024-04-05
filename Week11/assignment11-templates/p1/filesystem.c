@@ -183,6 +183,11 @@ char _readFileByte(OpenFileHandle *handle) {
     int offsetWithinBlock = handle->currentFileOffset % BLOCK_SIZE;
     int blockIndex = handle->currentBlock;
 
+    uint32_t blockIndex = handle->currentBlock;
+    if (blockIndex == INVALID_BLOCK_INDEX) {
+        return -1; // Handle as appropriate
+    }
+
     // If at the start of a new block, find the correct block using the FAT
     if (offsetWithinBlock == 0 && handle->currentFileOffset != 0) {
         blockIndex = handle->fileSystem->header->fat[handle->currentBlock];
