@@ -175,30 +175,13 @@ void closeFile(OpenFileHandle *handle)
 }
 
 char _readFileByte(OpenFileHandle *handle) {
-    if (!_hasMoreBytes(handle)) {
-        return -1; // Indicate end of file or error
-    }
+    assert(handle != NULL);
+    assert(_hasMoreBytes(handle));
+    assert(handle->fileSystem != NULL);
+    assert(handle->currentBlock < handle->fileSystem->header->fsBlocks);
 
-    // Calculate the position within the current block
-    int blockOffset = handle->currentFileOffset % BLOCK_SIZE;
-    if (blockOffset == 0 && handle->currentFileOffset > 0) {
-        // Move to the next block using FAT, assuming the first block is already correct
-        handle->currentBlock = handle->fileSystem->header->fat[handle->currentBlock];
-    }
+    return 0;
 
-    // Calculate the physical position in the file
-    off_t position = HEADER_SIZE + handle->currentBlock * BLOCK_SIZE + blockOffset;
-
-    // Move the file descriptor to the correct position
-    lseek(handle->fileSystem->fd, position, SEEK_SET);
-
-    char byte;
-    if (read(handle->fileSystem->fd, &byte, 1) != 1) {
-        return -1; // Handle read error
-    }
-
-    handle->currentFileOffset++;
-    return byte;
 }
 
 int readFile(OpenFileHandle *handle, char *buffer, int length)
