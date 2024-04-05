@@ -179,6 +179,8 @@ char _readFileByte(OpenFileHandle *handle) {
     assert(_hasMoreBytes(handle));
     assert(handle->fileSystem != NULL);
     assert(handle->currentBlock < BLOCK_SIZE);
+
+    return 0;
 }
 
 int readFile(OpenFileHandle *handle, char *buffer, int length)
