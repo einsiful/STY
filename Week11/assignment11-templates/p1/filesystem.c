@@ -176,29 +176,9 @@ void closeFile(OpenFileHandle *handle)
 
 char _readFileByte(OpenFileHandle *handle)
 {
-	if (!_hasMoreBytes(handle)) {
-        // No more bytes to read.
-        return -1;
-    }
+	(void)handle;
 
-    char byte;
-    int blockOffset = handle->currentFileOffset % BLOCK_SIZE;
-    int blockNumber = handle->currentFileOffset / BLOCK_SIZE;
-
-    if (blockOffset == 0) {
-        // Read the next block from the file system.
-        ssize_t bytesRead = handle->fileSystem->header->fsBlocks;
-        if (bytesRead != BLOCK_SIZE) {
-            // Handle read error
-            return -1;
-        }
-    }
-
-    // Read the byte from the current block.
-    byte = handle->fileSystem->header->fat[blockOffset];
-    handle->currentFileOffset++;
-
-    return byte;
+    return 0;
 
 }
 
